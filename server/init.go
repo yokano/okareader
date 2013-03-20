@@ -11,5 +11,5 @@ import(
 
 func init() {
 	http.HandleFunc("/", home)
-	http.HandleFunc("/atom", atom_test)
+	http.HandleFunc("/atom", dao_test)
 }

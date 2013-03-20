@@ -15,7 +15,7 @@
 			</div>
 			<div data-role="content">
 				<ul data-role="listview" data-count-theme="c">
-					{{range .Entries}}<li><a href="#">{{.Title}}</a></li>{{end}}
+					{{range .Entries}}<li><a href="{{.Link.Href}}">{{.Title}}</a></li>{{end}}
 				</ul>
 			</div>
 			<div data-role="footer" data-position="fixed">
