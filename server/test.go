@@ -3,7 +3,6 @@ import (
 	"appengine"
 	"net/http"
 	"text/template"
-	"log"
 )
 
 func atom_test(w http.ResponseWriter, r *http.Request) {
@@ -22,14 +21,12 @@ func atom_test(w http.ResponseWriter, r *http.Request) {
 }
 
 func dao_test(w http.ResponseWriter, r *http.Request) {
-	var dao *DAO
-	var c appengine.Context
-	var atom *Atom
+//	var encodedKey string
+//	var atom *Atom
 
-	c = appengine.NewContext(r)
 //	atom = get(c, "http://feed.rssad.jp/rss/gigazine/rss_atom")
-	dao = new(DAO)
 //	dao.RegisterFeed(c, atom)
-	atom = dao.GetFeed(c, "tag:gigazine.net,2013:03:21")
-	log.Printf("%s", atom.Id)
+//	atom = dao.GetFeed(c, "tag:gigazine.net,2013:03:21")
+//	encodedKey = dao.RegisterFolder(c, "testfolder", false)
+//	dao.RemoveFolder(c, encodedKey)
 }

@@ -10,22 +10,13 @@
 	<body>
 		<div data-role="page">
 			<div data-role="header">
-				<h1>ホーム</h1>
-				<a href="{{.LogoutURL}}" data-icon="delete" class="ui-btn-right">ログアウト</a>
+				<h1>ログイン</h1>
+				<a href="{{.LoginURL}}" data-icon="check" class="ui-btn-right">ログイン</a>
 			</div>
 			<div data-role="content">
-				<ul data-role="listview" data-count-theme="c">
-					{{range .Children}}<li><a href="{{.Link.Href}}">{{.Title}}</a></li>{{end}}
-				</ul>
+				<p>ログインしてください</p>
 			</div>
 			<div data-role="footer" data-position="fixed">
-				<div data-role="navbar">
-					<ul>
-						<li><a href="#" data-icon="add">追加</a></li>
-						<li><a href="#" data-icon="edit">編集</a></li>
-						<li><a href="#" data-icon="check">既読化</a></li>
-					</ul>
-				</div>
 			</div>
 		</div>
 	</body>

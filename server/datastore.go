@@ -5,7 +5,8 @@ package okareader
 import (
 	"appengine"
 	"appengine/datastore"
-//	"log"
+	"appengine/user"
+	"log"
 )
 
 // データの表示時に使用するデータモデル
@@ -17,12 +18,21 @@ type Entry struct {
 	Summary string `xml:"summary"`
 	Title string `xml:"title"`
 	Updated string `xml:"updated"`
+	Owner string
 }
 
 type Atom struct {
 	Id string `xml:"id"`
 	Title string `xml:"title"`
 	Entries []*Entry `xml:"entry"`
+	Owner string
+}
+
+type Folder struct {
+	Type string  // root or other
+	Name string
+	Children []*datastore.Key
+	Owner string
 }
 
 // データストアに保存する時のデータモデル
@@ -43,6 +53,90 @@ type Atom_DB struct {
 
 // DAO
 type DAO struct {
+}
+
+/**
+ * フォルダの登録
+ * @param c {Context} コンテクスト
+ * @param u {User} ユーザ
+ * @param name {string} フォルダ名
+ * @param root {bool} ルートフォルダならtrue
+ * @returns {string} 追加したフォルダのキーをエンコードした文字列
+ */
+func (this *DAO) RegisterFolder(c appengine.Context, u *user.User, name string, root bool) string {
+	var folder *Folder
+	var key *datastore.Key
+	var err error
+	var encodedKey string
+	
+	folder = new(Folder)
+	folder.Owner = u.ID
+	folder.Children = make([]*datastore.Key, 0)
+	if root {
+		folder.Type = "root"
+		folder.Name = "root"
+	} else {
+		folder.Type = "other"
+		folder.Name = name
+	}
+	
+	key = datastore.NewIncompleteKey(c, "folder", nil)
+	key, err = datastore.Put(c, key, folder)
+	Check(c, err)
+	
+	log.Printf("OK")
+	
+	encodedKey = key.Encode()
+	return encodedKey
+}
+
+/**
+ * フォルダの削除
+ * 中身も全て削除する
+ * rootフォルダは削除不可
+ * @param encodedKey {string} 削除するフォルダのキーをエンコードした文字列
+ */
+func (this *DAO) RemoveFolder(c appengine.Context, encodedKey string) {
+	var err error
+	var key *datastore.Key
+	
+	key, err = datastore.DecodeKey(encodedKey)
+	Check(c, err)
+	
+	err = datastore.Delete(c, key)
+	Check(c, err)
+}
+
+/**
+ * ルートフォルダを取得
+ */
+func (this *DAO) GetRootFolder(c appengine.Context, u *user.User) *Folder {
+	var root *Folder
+	var query *datastore.Query
+	var iterator *datastore.Iterator
+	var err error
+	
+	root = new(Folder)
+	query = datastore.NewQuery("folder").Filter("Type =", "root").Filter("Owner =", u.ID)
+	iterator = query.Run(c)
+	_, err = iterator.Next(root)
+	Check(c, err)
+	
+	return root
+}
+
+/**
+ * フォルダの中身を取得する
+ * @param {*Folder} folder 親フォルダ
+ * @returns {[]interface{}} フォルダの中身を配列化したもの
+ */
+func (this *DAO) GetChildren(c appengine.Context, folder *Folder) []interface{} {
+	var err error
+	var children []interface{}
+	
+	err = datastore.GetMulti(c, folder.Children, children)
+	Check(c, err)
+	return children
 }
 
 /**
