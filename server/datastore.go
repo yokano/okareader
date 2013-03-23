@@ -6,7 +6,6 @@ import (
 	"appengine"
 	"appengine/datastore"
 	"appengine/user"
-	"log"
 )
 
 // データの表示時に使用するデータモデル
@@ -33,6 +32,7 @@ type Folder struct {
 	Name string
 	Children []*datastore.Key
 	Owner string
+	Key string  // encoded string key
 }
 
 // データストアに保存する時のデータモデル
@@ -81,10 +81,9 @@ func (this *DAO) RegisterFolder(c appengine.Context, u *user.User, name string, 
 	}
 	
 	key = datastore.NewIncompleteKey(c, "folder", nil)
+	folder.Key = key.Encode()
 	key, err = datastore.Put(c, key, folder)
 	Check(c, err)
-	
-	log.Printf("OK")
 	
 	encodedKey = key.Encode()
 	return encodedKey
@@ -143,8 +142,9 @@ func (this *DAO) GetChildren(c appengine.Context, folder *Folder) []interface{} 
  * フィードとそれに含まれるエントリをデータストアに追加
  * 既に存在するものは上書きされる
  * @param feed {Atom} 登録するフィードオブジェクト
+ * @param {*Folder} to 追加するフォルダ
  */
-func (this *DAO) RegisterFeed(c appengine.Context, feed *Atom) {
+func (this *DAO) RegisterFeed(c appengine.Context, feed *Atom, to *Folder) {
 	var key *datastore.Key
 	var err error
 	var atom_db *Atom_DB
