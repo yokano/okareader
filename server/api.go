@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"appengine"
 	"appengine/user"
+	"log"
 )
 
 func addFolder(w http.ResponseWriter, r *http.Request) {
@@ -13,9 +14,9 @@ func addFolder(w http.ResponseWriter, r *http.Request) {
 	var u *user.User
 	var dao *DAO
 	var name string
-	var parentFolder *Folder
+//	var parentFolder *Folder
 	var encodedParentKey string
-	var childKey string
+//	var childKey string
 	
 	c = appengine.NewContext(r)
 	u = user.Current(c)
@@ -26,12 +27,14 @@ func addFolder(w http.ResponseWriter, r *http.Request) {
 	encodedParentKey = r.FormValue("folder_key")
 	
 	// 親フォルダを取得
-	parentFolder = dao.GetFolder(c, encodedParentKey)
+//	parentFolder = dao.GetFolder(c, encodedParentKey)
 	
 	// フォルダ新規作成
-	childKey = dao.RegisterFolder(c, u, name, false, encodedParentKey)
+	log.Printf("ParentKey:%s", encodedParentKey)
+	dao.RegisterFolder(c, u, name, false, encodedParentKey)
+//	childKey = dao.RegisterFolder(c, u, name, false, encodedParentKey)
 	
 	// 親フォルダに関連付ける
-	parentFolder.Children = append(parentFolder.Children, childKey)
-	dao.UpdateFolder(c, encodedParentKey, parentFolder)
+//	parentFolder.Children = append(parentFolder.Children, childKey)
+//	dao.UpdateFolder(c, encodedParentKey, parentFolder)
 }

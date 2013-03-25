@@ -93,10 +93,12 @@ func (this *DAO) RegisterFolder(c appengine.Context, u *user.User, name string, 
 	
 	// 親フォルダの子に登録
 	if !root {
+		
 		// 親のChildrenに子のキーを追加して上書きする
 		parentKey, err = datastore.DecodeKey(encodedParentKey)
 		Check(c, err)
 		
+		parentFolder = new(Folder)
 		err = datastore.Get(c, parentKey, parentFolder)
 		Check(c, err)
 		
