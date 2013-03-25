@@ -24,11 +24,24 @@ func (this *View) ShowFolder(c appengine.Context, key string, folder *Folder, w 
 	var content map[string]interface{}
 	var err error
 	var t *template.Template
+	var children []interface{}
+	var child interface{}
+	var encodedKey string
+	var dao *DAO
+	
+	dao = new(DAO)
 	
 	content = make(map[string]interface{}, 0)
 	content["LogoutURL"], err = user.LogoutURL(c, "/")
 	content["FolderKey"] = key
 	Check(c, err)
+	
+	children = make([]interface{}, 0)
+	for _, encodedKey = range folder.Children {
+		child = dao.GetFolder(c, encodedKey)
+		children = append(children, child)
+	}
+	content["Children"] = children
 	
 	t, err = template.ParseFiles("server/home.html")
 	Check(c, err)

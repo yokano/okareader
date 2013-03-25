@@ -32,7 +32,6 @@ type Folder struct {
 	Name string
 	Children []string  // encoded string array
 	Owner string
-//	Key string  // encoded string key
 }
 
 // データストアに保存する時のデータモデル
