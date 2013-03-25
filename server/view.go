@@ -20,13 +20,14 @@ type View struct {
  * フォルダの中身を一覧表示
  * @methodOf View
  */
-func (this *View) ShowFolder(c appengine.Context, folder *Folder, w http.ResponseWriter) {
+func (this *View) ShowFolder(c appengine.Context, key string, folder *Folder, w http.ResponseWriter) {
 	var content map[string]interface{}
 	var err error
 	var t *template.Template
 	
 	content = make(map[string]interface{}, 0)
 	content["LogoutURL"], err = user.LogoutURL(c, "/")
+	content["FolderKey"] = key
 	Check(c, err)
 	
 	t, err = template.ParseFiles("server/home.html")

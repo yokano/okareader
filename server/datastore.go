@@ -30,9 +30,9 @@ type Atom struct {
 type Folder struct {
 	Type string  // root or other
 	Name string
-	Children []*datastore.Key
+	Children []string  // encoded string array
 	Owner string
-	Key string  // encoded string key
+//	Key string  // encoded string key
 }
 
 // データストアに保存する時のデータモデル
@@ -56,22 +56,26 @@ type DAO struct {
 }
 
 /**
- * フォルダの登録
+ * フォルダの新規登録
  * @param c {Context} コンテクスト
  * @param u {User} ユーザ
  * @param name {string} フォルダ名
  * @param root {bool} ルートフォルダならtrue
+ * @param encodedParentKey {string} 追加先の親フォルダのキー
  * @returns {string} 追加したフォルダのキーをエンコードした文字列
  */
-func (this *DAO) RegisterFolder(c appengine.Context, u *user.User, name string, root bool) string {
+func (this *DAO) RegisterFolder(c appengine.Context, u *user.User, name string, root bool, encodedParentKey string) string {
 	var folder *Folder
 	var key *datastore.Key
 	var err error
 	var encodedKey string
+	var parentFolder *Folder
+	var parentKey *datastore.Key
 	
+	// 追加するフォルダの作成
 	folder = new(Folder)
 	folder.Owner = u.ID
-	folder.Children = make([]*datastore.Key, 0)
+	folder.Children = make([]string, 0)
 	if root {
 		folder.Type = "root"
 		folder.Name = "root"
@@ -80,13 +84,45 @@ func (this *DAO) RegisterFolder(c appengine.Context, u *user.User, name string, 
 		folder.Name = name
 	}
 	
+	// 追加するフォルダをデータストアに保存
 	key = datastore.NewIncompleteKey(c, "folder", nil)
-	folder.Key = key.Encode()
 	key, err = datastore.Put(c, key, folder)
 	Check(c, err)
 	
 	encodedKey = key.Encode()
+	
+	// 親フォルダの子に登録
+	if !root {
+		// 親のChildrenに子のキーを追加して上書きする
+		parentKey, err = datastore.DecodeKey(encodedParentKey)
+		Check(c, err)
+		
+		err = datastore.Get(c, parentKey, parentFolder)
+		Check(c, err)
+		
+		parentFolder.Children = append(parentFolder.Children, encodedKey)
+		
+		_, err = datastore.Put(c, parentKey, parentFolder)
+		Check(c, err)
+	}
+	
 	return encodedKey
+}
+
+/**
+ * フォルダの更新
+ * @param {appengine.Context} c コンテキスト
+ * @param {string} encodedKey 文字列
+ */
+func (this *DAO) UpdateFolder(c appengine.Context, encodedKey string, folder *Folder) {
+	var key *datastore.Key
+	var err error
+	
+	key, err = datastore.DecodeKey(encodedKey)
+	Check(c, err)
+	
+	_, err = datastore.Put(c, key, folder)
+	Check(c, err)
 }
 
 /**
@@ -107,21 +143,47 @@ func (this *DAO) RemoveFolder(c appengine.Context, encodedKey string) {
 }
 
 /**
+ * フォルダの取得
+ * @param {appengine.Context} c コンテキスト
+ * @param {string} encodedKey 取得したいフォルダのキーをエンコードした文字列
+ */
+func (this *DAO) GetFolder(c appengine.Context, encodedKey string) *Folder {
+	var key *datastore.Key
+	var err error
+	var folder *Folder
+	
+	key, err = datastore.DecodeKey(encodedKey)
+	Check(c, err)
+	
+	folder = new(Folder)
+	err = datastore.Get(c, key, folder)
+	Check(c, err)
+	
+	return folder
+}
+
+/**
  * ルートフォルダを取得
  */
-func (this *DAO) GetRootFolder(c appengine.Context, u *user.User) *Folder {
+func (this *DAO) GetRootFolder(c appengine.Context, u *user.User) (string, *Folder) {
 	var root *Folder
 	var query *datastore.Query
 	var iterator *datastore.Iterator
 	var err error
+	var key *datastore.Key
+	var encodedKey string
 	
 	root = new(Folder)
 	query = datastore.NewQuery("folder").Filter("Type =", "root").Filter("Owner =", u.ID)
 	iterator = query.Run(c)
-	_, err = iterator.Next(root)
+	key, err = iterator.Next(root)
 	Check(c, err)
 	
-	return root
+	if key != nil {
+		encodedKey = key.Encode()
+	}
+	
+	return encodedKey, root
 }
 
 /**
@@ -132,8 +194,18 @@ func (this *DAO) GetRootFolder(c appengine.Context, u *user.User) *Folder {
 func (this *DAO) GetChildren(c appengine.Context, folder *Folder) []interface{} {
 	var err error
 	var children []interface{}
+	var keys []*datastore.Key
+	var encodedKey string
+	var key *datastore.Key
 	
-	err = datastore.GetMulti(c, folder.Children, children)
+	keys = make([]*datastore.Key, 0)
+	for _, encodedKey = range folder.Children {
+		key, err = datastore.DecodeKey(encodedKey)
+		Check(c, err)
+		keys = append(keys, key)
+	}
+	
+	err = datastore.GetMulti(c, keys, children)
 	Check(c, err)
 	return children
 }
