@@ -9,13 +9,13 @@
 		<script src="/client/home.js"></script>
 	</head>
 	<body>
-		<div data-role="page">
-			<div data-role="header">
+		<div data-role="page" id="folder">
+			<div data-role="header" data-position="fixed">
 				<h1>ホーム</h1>
 				<a href="{{.LogoutURL}}" data-icon="delete" class="ui-btn-right">ログアウト</a>
 			</div>
 			<div data-role="content">
-				<ul data-role="listview" data-count-theme="c">
+				<ul id="contents" data-role="listview" data-count-theme="c">
 					{{range .Children}}<li><a href="#">{{.Name}}</a></li>{{end}}
 				</ul>
 			</div>
@@ -35,13 +35,10 @@
 				</div>
 				
 				<div data-role="popup" id="add_folder" data-theme="a" style="padding: 10px 20px;">
-					<form method="post" action="/addfolder">
-						<label>フォルダ名</label>
-						<input type="text" name="folder_name"></input>
-						<input type="hidden" name="folder_key" value="{{.FolderKey}}"></input>
-						<input type="submit" value="追加する" data-theme="c">
-						</input>
-					</form>
+					<label>フォルダ名</label>
+					<input type="text" id="folder_name"></input>
+					<input type="hidden" id="folder_key" value="{{.FolderKey}}"></input>
+					<input id="add_folder_button" type="button" value="追加する" data-theme="c"></input>
 				</div>
 			</div>
 		</div>
