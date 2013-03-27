@@ -6,7 +6,6 @@ import (
 	"appengine"
 	"appengine/datastore"
 	"appengine/user"
-	"log"
 )
 
 type Folder struct {
@@ -130,6 +129,47 @@ func (this *DAO) GetFolder(c appengine.Context, encodedKey string) *Folder {
 }
 
 /**
+ * フォルダ・フィードの取得
+ * フォルダの中身を表示するときなど取り出す対象がどちらかわからないときに使用する
+ * @methodOf DAO
+ * @param {appengine.Context} c コンテキスト
+ * @param {string} encodedKey エンコード済みのキー
+ * @returns {*Folder or *Atom} 取得したフォルダまたはフィードオブジェクト
+ */
+func (this *DAO) GetItem(c appengine.Context, encodedKey string) interface{} {
+	var key *datastore.Key
+	var err error
+	type Item struct {
+		Title string
+		Owner string
+		Entries []string
+		Type string
+		Id string
+	}
+	var item *Item
+	var result interface{}
+	
+	key, err = datastore.DecodeKey(encodedKey)
+	Check(c, err)
+	
+	item = new(Item)
+	err = datastore.Get(c, key, item)
+	Check(c, err)
+	
+	if item.Type == "" {
+		// 要素はAtom
+		result = new(Atom)
+		result = item
+	} else {
+		// 要素はフォルダ
+		result = new(Folder)
+		result = item
+	}
+	
+	return result
+}
+
+/**
  * ルートフォルダを取得
  */
 func (this *DAO) GetRootFolder(c appengine.Context, u *user.User) (string, *Folder) {
@@ -184,31 +224,34 @@ func (this *DAO) GetChildren(c appengine.Context, folder *Folder) []interface{} 
  * @param {appengine.Context} c コンテキスト
  * @param {*Atom} feed 登録するフィードオブジェクト
  * @param {string} to 追加先のフォルダのキー
- * @returns {*datastore.Key} 追加したフィードのキー
+ * @returns {string} 追加したフィードのキーをエンコードしたもの
  */
-func (this *DAO) RegisterFeed(c appengine.Context, atom *Atom, to string) *datastore.Key {
+func (this *DAO) RegisterFeed(c appengine.Context, atom *Atom, to string) string {
 	var key *datastore.Key
+	var encodedKey string
 	var err error
 	var parentFolderKey *datastore.Key
 	var parentFolder *Folder
 	
 	// フィード保存
-	log.Printf("Id:%s\n", atom.Id)
 	key = datastore.NewKey(c, "feed", atom.Id, 0, nil)
 	key, err = datastore.Put(c, key, atom)
 	Check(c, err)
+	encodedKey = key.Encode()
 	
-	// フォルダに追加
+	// 親フォルダ取得
 	parentFolderKey, err = datastore.DecodeKey(to)
 	Check(c, err)
 	parentFolder = new(Folder)
 	err = datastore.Get(c, parentFolderKey, parentFolder)
 	Check(c, err)
-	parentFolder.Children = append(parentFolder.Children, atom.Id)
+	
+	// 親フォルダの子に追加
+	parentFolder.Children = append(parentFolder.Children, encodedKey)
 	_, err = datastore.Put(c, parentFolderKey, parentFolder)
 	Check(c, err)
 	
-	return key
+	return encodedKey
 }
 
 /**

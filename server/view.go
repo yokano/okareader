@@ -38,7 +38,8 @@ func (this *View) ShowFolder(c appengine.Context, key string, folder *Folder, w 
 	
 	children = make([]interface{}, 0)
 	for _, encodedKey = range folder.Children {
-		child = dao.GetFolder(c, encodedKey)
+		child = nil
+		child = dao.GetItem(c, encodedKey)
 		children = append(children, child)
 	}
 	content["Children"] = children
