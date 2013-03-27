@@ -17,7 +17,7 @@ func addFolder(w http.ResponseWriter, r *http.Request) {
 	var c appengine.Context
 	var u *user.User
 	var dao *DAO
-	var name string
+	var title string
 	var encodedParentKey string
 	
 	c = appengine.NewContext(r)
@@ -25,11 +25,11 @@ func addFolder(w http.ResponseWriter, r *http.Request) {
 	dao = new(DAO)
 	
 	// フォームデータ取得
-	name = r.FormValue("folder_name")
+	title = r.FormValue("folder_name")
 	encodedParentKey = r.FormValue("folder_key")
 	
 	// フォルダ新規作成
-	dao.RegisterFolder(c, u, name, false, encodedParentKey)
+	dao.RegisterFolder(c, u, title, false, encodedParentKey)
 }
 
 /**

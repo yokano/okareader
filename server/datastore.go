@@ -11,7 +11,7 @@ import (
 
 type Folder struct {
 	Type string  // root or other
-	Name string
+	Title string
 	Children []string  // encoded string array
 	Owner string
 }
@@ -24,12 +24,12 @@ type DAO struct {
  * フォルダの新規登録
  * @param c {Context} コンテクスト
  * @param u {User} ユーザ
- * @param name {string} フォルダ名
+ * @param title {string} フォルダ名
  * @param root {bool} ルートフォルダならtrue
  * @param encodedParentKey {string} 追加先の親フォルダのキー
  * @returns {string} 追加したフォルダのキーをエンコードした文字列
  */
-func (this *DAO) RegisterFolder(c appengine.Context, u *user.User, name string, root bool, encodedParentKey string) string {
+func (this *DAO) RegisterFolder(c appengine.Context, u *user.User, title string, root bool, encodedParentKey string) string {
 	var folder *Folder
 	var key *datastore.Key
 	var err error
@@ -43,10 +43,10 @@ func (this *DAO) RegisterFolder(c appengine.Context, u *user.User, name string, 
 	folder.Children = make([]string, 0)
 	if root {
 		folder.Type = "root"
-		folder.Name = "root"
+		folder.Title = "root"
 	} else {
 		folder.Type = "other"
-		folder.Name = name
+		folder.Title = title
 	}
 	
 	// 追加するフォルダをデータストアに保存
