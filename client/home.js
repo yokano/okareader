@@ -7,6 +7,7 @@ $(function() {
 	
 	// フォルダを追加するボタン
 	$('#add_folder_button').tap(function() {
+		console.log('フォルダ追加ボタンが押されました');
 		var name = $('#folder_name').val();
 		
 		$.ajax('/api/addfolder', {

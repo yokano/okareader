@@ -3,6 +3,7 @@ version: 0-0
 runtime: go
 api_version: go1
 
+
 handlers:
 - url: /client
   static_dir: client

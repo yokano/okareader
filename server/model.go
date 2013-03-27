@@ -1,5 +1,6 @@
 /**
  * データモデルの定義とデータストアへのアクセス
+ * データストアへのアクセスはここからだけ行う
  */
 package okareader
 import (
@@ -133,7 +134,7 @@ func (this *DAO) GetFolder(c appengine.Context, encodedKey string) *Folder {
  * フォルダの中身を表示するときなど取り出す対象がどちらかわからないときに使用する
  * @methodOf DAO
  * @param {appengine.Context} c コンテキスト
- * @param {string} encodedKey エンコード済みのキー
+ * @param {string} encodedKey アイテムのエンコード済みのキー
  * @returns {*Folder or *Atom} 取得したフォルダまたはフィードオブジェクト
  */
 func (this *DAO) GetItem(c appengine.Context, encodedKey string) interface{} {
@@ -144,7 +145,7 @@ func (this *DAO) GetItem(c appengine.Context, encodedKey string) interface{} {
 		Owner string
 		Entries []string
 		Type string
-		Id string
+		Id string 
 	}
 	var item *Item
 	var result interface{}

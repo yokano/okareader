@@ -1,5 +1,8 @@
 /**
- *  @file データを受け取ってページを表示する処理
+ * Controllerの命令に従いページを描画する
+ * ここからデータストアへ直接アクセスしてはいけない
+ * データが必要な場合は必ず DAO(model.go) に頼むこと
+ * htmlファイルへのアクセスはここからだけ行なってよい
  */
 package okareader
 import (
@@ -19,35 +22,47 @@ type View struct {
 /**
  * フォルダの中身を一覧表示
  * @methodOf View
+ * @param {appengine.Context} c コンテキスト
+ * @param {string} key エンコード済みのフォルダのキー
+ * @param {http.ResponseWriter} w HTMLの出力先
  */
-func (this *View) ShowFolder(c appengine.Context, key string, folder *Folder, w http.ResponseWriter) {
-	var content map[string]interface{}
+func (this *View) ShowFolder(c appengine.Context, key string, w http.ResponseWriter) {
+	type ListItem struct {
+		Key string
+		Item interface{}
+	}
+	var contents map[string]interface{}
 	var err error
 	var t *template.Template
-	var children []interface{}
-	var child interface{}
-	var encodedKey string
+	var children []*ListItem
 	var dao *DAO
+	var folder *Folder
+	var item *ListItem
 	
 	dao = new(DAO)
 	
-	content = make(map[string]interface{}, 0)
-	content["LogoutURL"], err = user.LogoutURL(c, "/")
-	content["FolderKey"] = key
+	contents = make(map[string]interface{}, 0)
+	contents["LogoutURL"], err = user.LogoutURL(c, "/")
+	contents["FolderKey"] = key
 	Check(c, err)
 	
-	children = make([]interface{}, 0)
-	for _, encodedKey = range folder.Children {
-		child = nil
-		child = dao.GetItem(c, encodedKey)
-		children = append(children, child)
+	folder = new(Folder)
+	folder = dao.GetFolder(c, key)
+	contents["Title"] = folder.Title
+	
+	children = make([]*ListItem, 0)
+	for _, key = range folder.Children {
+		item = new(ListItem)
+		item.Key = key
+		item.Item = dao.GetItem(c, key)
+		children = append(children, item)
 	}
-	content["Children"] = children
+	contents["Children"] = children
 	
-	t, err = template.ParseFiles("server/html/home.html")
+	t, err = template.ParseFiles("server/html/folder.html")
 	Check(c, err)
 	
-	t.Execute(w, content)
+	t.Execute(w, contents)
 }
 
 /**

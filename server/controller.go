@@ -1,6 +1,7 @@
 /**
- * クライアントからのリクエストを振り分ける
- * ブラウザからのアクセスやAjaxによるアクセスに対応する
+ * ブラウザやAjaxのリクエストを適切な処理へ振り分ける
+ * 直接データストアへアクセスしたり画面を描画したりしてはいけない
+ * データストアへのアクセスはModelに,画面の描画はViewに頼むこと.
  */
 
 package okareader
@@ -13,23 +14,23 @@ import(
 
 /**
  * リクエストURLによる処理の振り分け
- * /api/*** はAjaxによるアクセスに対応するもので api.go 内に処理を記述
- * それ以外のURLはこのファイルで処理する
- * @func
+ * /api/*** はAjaxによるAPIへのアクセスであり画面の描画は不用
+ * それ以外はページ遷移を表し画面を描画する
+ * @function
  */
 func init() {
 	http.HandleFunc("/", home)
-	http.HandleFunc("/atom", atom_test)
+	http.HandleFunc("/folder", folder)
+	http.HandleFunc("/test", atom_test)
 	http.HandleFunc("/api/addfolder", addFolder)
 	http.HandleFunc("/api/addfeed", addFeed)
-	http.HandleFunc("/folder", folder)
 }
 
 /**
  * http://okareader.appspot.com/ へアクセスした時の処理
  * ログインしていなければログインさせる
  * ログインしていればルートフォルダを表示
- * @func
+ * @function
  * @param {http.ResponseWriter} 応答先
  * @param {*http.Request} リクエスト
  */
@@ -53,12 +54,33 @@ func home(w http.ResponseWriter, r *http.Request) {
 		if root.Type == "" {
 			key = dao.RegisterFolder(c, u, "root", true, "")
 		}
-		view.ShowFolder(c, key, root, w)
+		view.ShowFolder(c, key, w)
 	}
 }
 
 /**
- * フォルダの追加
+ * http://okareader.appspot.com/folder へアクセスしたらフォルダを表示
+ * フォルダをデータストアから取得するためのキーをGETで受け取る
+ * @function
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ * @param {HTTP Get} key エンコード済みのフォルダキー
+ */
+func folder(w http.ResponseWriter, r *http.Request) {
+	var c appengine.Context
+	var view *View
+	var encodedKey string
+	
+	c = appengine.NewContext(r)
+	encodedKey = r.FormValue("key")
+
+	view = new(View)
+	view.ShowFolder(c, encodedKey, w)
+}
+
+/**
+ * API:フォルダの新規追加
+ * @function
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r HTTPリクエスト
  */
@@ -82,7 +104,8 @@ func addFolder(w http.ResponseWriter, r *http.Request) {
 }
 
 /**
- * フィードの追加
+ * API:フィードの登録
+ * @function
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request}
  */
@@ -107,16 +130,4 @@ func addFeed(w http.ResponseWriter, r *http.Request) {
 	 
 	 // フィード追加
 	 dao.RegisterFeed(c, atom, encodedParentKey)
-}
-
-/**
- * http://okareader.appspot.com/folder へアクセスしたらフォルダを表示
- * フォルダをデータストアから取得するためのキーをGETで受け取る
- * @func
- * @param {http.ResponseWriter} 応答先
- * @param {*http.Request} リクエスト
- * 
- */
-func folder(w http.ResponseWriter, r *http.Request) {
-
 }

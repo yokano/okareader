@@ -2,12 +2,14 @@ okareader
 =========
 
 PC,スマホ対応RSSリーダーのWebアプリ  
+GoogleAppEngine + Go で動作しています  
 MitLicenseです
 
 現在開発中です  
 
 	okareader/
 	├── README.md  このファイル
+	├── LICENSE.txt  ライセンス
 	├── app.yaml   アプリの設定ファイル
 	├── client     クライアント(htmlファイル)が使うファイル
 	│   └── home.js
@@ -22,9 +24,8 @@ MitLicenseです
 		│   ├── folder.html
 		│   ├── home.html
 		│   └── login.html
-		└─── library
-		├── atom.go
-		└── lib.go
+		├── atom.go        Atom読み込みライブラリ
+		└── lib.go         その他の処理
 
 client/ は静的ディレクトリとして設定しているため、  
 goからアクセスすることができないので注意。  
