@@ -8,6 +8,11 @@ import (
 	"appengine/user"
 )
 
+/**
+ * フォルダの追加
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r HTTPリクエスト
+ */
 func addFolder(w http.ResponseWriter, r *http.Request) {
 	var c appengine.Context
 	var u *user.User
@@ -25,4 +30,32 @@ func addFolder(w http.ResponseWriter, r *http.Request) {
 	
 	// フォルダ新規作成
 	dao.RegisterFolder(c, u, name, false, encodedParentKey)
+}
+
+/**
+ * フィードの追加
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request}
+ */
+func addFeed(w http.ResponseWriter, r *http.Request) {
+	 var url string
+	 var encodedParentKey string
+	 var dao *DAO
+	 var c appengine.Context
+	 var atom *Atom
+	 var atomTemplate *AtomTemplate
+	 
+	 c = appengine.NewContext(r)
+	 dao = new(DAO)
+	 atomTemplate = new(AtomTemplate)
+	 
+	 // フォームデータ取得
+	 url = r.FormValue("url")
+	 encodedParentKey = r.FormValue("folder_key")
+	 
+	 // フィード取得
+	 atom, _ = atomTemplate.Get(c, url)
+	 
+	 // フィード追加
+	 dao.RegisterFeed(c, atom, encodedParentKey)
 }

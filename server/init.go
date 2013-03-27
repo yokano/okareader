@@ -12,5 +12,6 @@ import(
 func init() {
 	http.HandleFunc("/", home)
 	http.HandleFunc("/atom", atom_test)
-	http.HandleFunc("/addfolder", addFolder)
+	http.HandleFunc("/api/addfolder", addFolder)
+	http.HandleFunc("/api/addfeed", addFeed)
 }

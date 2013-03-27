@@ -6,6 +6,7 @@ import (
 	"appengine"
 	"appengine/datastore"
 	"appengine/user"
+	"log"
 )
 
 type Folder struct {
@@ -179,19 +180,45 @@ func (this *DAO) GetChildren(c appengine.Context, folder *Folder) []interface{} 
 /**
  * フィードをデータストアに追加
  * 既に存在するものは上書きされる
- * @param feed {Atom} 登録するフィードオブジェクト
- * @param {*Folder} to 追加するフォルダ
+ * @methodOf DAO
+ * @param {appengine.Context} c コンテキスト
+ * @param {*Atom} feed 登録するフィードオブジェクト
+ * @param {string} to 追加先のフォルダのキー
+ * @returns {*datastore.Key} 追加したフィードのキー
  */
-func (this *DAO) RegisterFeed(c appengine.Context, feed *Atom, to *Folder) {
+func (this *DAO) RegisterFeed(c appengine.Context, atom *Atom, to string) *datastore.Key {
 	var key *datastore.Key
 	var err error
-	var atom *Atom
+	var parentFolderKey *datastore.Key
+	var parentFolder *Folder
 	
 	// フィード保存
+	log.Printf("Id:%s\n", atom.Id)
 	key = datastore.NewKey(c, "feed", atom.Id, 0, nil)
-	_, err = datastore.Put(c, key, atom)
+	key, err = datastore.Put(c, key, atom)
 	Check(c, err)
 	
+	// フォルダに追加
+	parentFolderKey, err = datastore.DecodeKey(to)
+	Check(c, err)
+	parentFolder = new(Folder)
+	err = datastore.Get(c, parentFolderKey, parentFolder)
+	Check(c, err)
+	parentFolder.Children = append(parentFolder.Children, atom.Id)
+	_, err = datastore.Put(c, parentFolderKey, parentFolder)
+	Check(c, err)
+	
+	return key
+}
+
+/**
+ * エントリをフィードに追加する
+ * @methodOf DAO
+ * @param {appengine.Context} c コンテキスト
+ * @param {[]*Entry} entries 追加するエントリ配列
+ * @param {string} to 追加先のフィードのキー
+ */
+func (this *DAO) RegisterEntries(c appengine.Context, entries []*Entry, to string) {
 	// エントリ保存
 //	for _, entry_db = range entries_db {
 //		key = datastore.NewKey(c, "entry", entry_db.Id, 0, nil)

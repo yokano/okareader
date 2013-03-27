@@ -24,14 +24,3 @@ func atom_test(w http.ResponseWriter, r *http.Request) {
 		log.Printf("[%d]:%s\n", i, entry.Title)
 	}
 }
-
-func dao_test(w http.ResponseWriter, r *http.Request) {
-//	var encodedKey string
-//	var atom *Atom
-
-//	atom = get(c, "http://feed.rssad.jp/rss/gigazine/rss_atom")
-//	dao.RegisterFeed(c, atom)
-//	atom = dao.GetFeed(c, "tag:gigazine.net,2013:03:21")
-//	encodedKey = dao.RegisterFolder(c, "testfolder", false)
-//	dao.RemoveFolder(c, encodedKey)
-}
