@@ -44,7 +44,7 @@ func (this *View) ShowFolder(c appengine.Context, key string, folder *Folder, w 
 	}
 	content["Children"] = children
 	
-	t, err = template.ParseFiles("server/home.html")
+	t, err = template.ParseFiles("server/html/home.html")
 	Check(c, err)
 	
 	t.Execute(w, content)
@@ -59,7 +59,7 @@ func (this *View) ShowLogin(c appengine.Context, w http.ResponseWriter) {
 	var err error
 	var t *template.Template
 	
-	t, err = template.ParseFiles("server/login.html")
+	t, err = template.ParseFiles("server/html/login.html")
 	Check(c, err)
 	
 	content = make(map[string]interface{}, 0)
