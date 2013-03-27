@@ -2,22 +2,27 @@ package okareader
 import (
 	"appengine"
 	"net/http"
-	"text/template"
+	"log"
 )
 
 func atom_test(w http.ResponseWriter, r *http.Request) {
+	var entry *Entry
+	var i int
 	var c appengine.Context
-	var t *template.Template
-	var err error
 	var atom *Atom
+	var entries []*Entry
+	var atomTemplate *AtomTemplate
 	
 	c = appengine.NewContext(r)
-	atom = get(c, "http://feed.rssad.jp/rss/gigazine/rss_atom")
-	t, err = template.ParseFiles("server/feed.html")
-	Check(c, err)
+	atom = new(Atom)
+	atomTemplate = new(AtomTemplate)
+	atom, entries = atomTemplate.Get(c, "http://feed.rssad.jp/rss/gigazine/rss_atom")
 	
-	err = t.Execute(w, atom)
-	Check(c, err)
+	log.Printf("Title:%s", atom.Title)
+	log.Printf("EntriesNum:%d", len(entries))
+	for i, entry = range entries {
+		log.Printf("[%d]:%s\n", i, entry.Title)
+	}
 }
 
 func dao_test(w http.ResponseWriter, r *http.Request) {
