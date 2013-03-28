@@ -10,6 +10,7 @@ import (
 	"appengine"
 	"appengine/user"
 	"net/http"
+//	"log"
 )
 
 /**
@@ -37,7 +38,7 @@ func (this *View) ShowFolder(c appengine.Context, key string, w http.ResponseWri
 	var children []*ListItem
 	var dao *DAO
 	var folder *Folder
-	var item *ListItem
+	var i int
 	
 	dao = new(DAO)
 	
@@ -50,12 +51,11 @@ func (this *View) ShowFolder(c appengine.Context, key string, w http.ResponseWri
 	folder = dao.GetFolder(c, key)
 	contents["Title"] = folder.Title
 	
-	children = make([]*ListItem, 0)
-	for _, key = range folder.Children {
-		item = new(ListItem)
-		item.Key = key
-		item.Item = dao.GetItem(c, key)
-		children = append(children, item)
+	children = make([]*ListItem, len(folder.Children))
+	for i, key = range folder.Children {
+		children[i] = new(ListItem)
+		children[i].Key = key
+		children[i].Item = dao.GetItem(c, key)
 	}
 	contents["Children"] = children
 	

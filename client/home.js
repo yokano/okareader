@@ -1,24 +1,30 @@
 /**
- * @file フォルダ画面のJavaScript
+ * フォルダ画面のJavaScript
  */
-
-$(function() {
-	var contents = $('#contents');
+$('.folder_page').live('pageinit', function() {
+	var contents = $(this).find('#contents');
+	var addFolderButton = $(this).find('#add_folder_button');
+	var folderName = $(this).find('#folder_name');
+	var folderKey = $(this).find('#folder_key');
+	var addFolder = $(this).find('#add_folder');
+	var addFeedButton = $(this).find('#add_feed_button');
+	var feedURL = $(this).find('#feed_url');
+	var addFeed = $(this).find('#add_feed');
 	
 	// フォルダを追加するボタン
-	$('#add_folder_button').tap(function() {
-		console.log('フォルダ追加ボタンが押されました');
-		var name = $('#folder_name').val();
+	addFolderButton.bind('tap', function() {
+		var name = folderName.val();
 		
 		$.ajax('/api/addfolder', {
 			data: {
 				folder_name: name,
-				folder_key: $('#folder_key').val()
+				folder_key: folderKey.val()
 			},
-			success: function() {
-				contents.append($('<li><a href="#">' + name + '</a></li>')).listview('refresh');
-				$('#add_folder').popup('close');
-				$('#folder_name').val('');
+			dataType: 'json',
+			success: function(data) {
+				contents.append($('<li><a href="/folder?key=' + data.key + '">' + name + '</a></li>')).listview('refresh');
+				addFolder.popup('close');
+				folderName.val('');
 			},
 			error: function() {
 				console.log('error');
@@ -27,18 +33,18 @@ $(function() {
 	});
 	
 	// フィードを追加するボタン
-	$('#add_feed_button').tap(function() {
+	addFeedButton.bind('tap', function() {
 		console.log('add feed');
-		var url = $('#feed_url').val();
+		var url = feedURL.val();
 		
 		$.ajax('/api/addfeed', {
 			data: {
 				url: url,
-				folder_key: $('#folder_key').val()
+				folder_key: folderKey.val()
 			},
 			success: function() {
-				$('#add_feed').popup('close');
-				$('#feed_url').val('');
+				addFeed.popup('close');
+				feedURL.val('');
 			},
 			error: function() {
 				console.log('error');
@@ -46,4 +52,3 @@ $(function() {
 		});
 	});
 });
-

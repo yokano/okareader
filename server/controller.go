@@ -10,6 +10,7 @@ import(
 	"appengine"
 	"appengine/user"
 	"net/http"
+	"fmt"
 )
 
 /**
@@ -83,6 +84,7 @@ func folder(w http.ResponseWriter, r *http.Request) {
  * @function
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r HTTPリクエスト
+ * @returns {AJAX:JSON} 追加したフォルダのキーを含むJSON
  */
 func addFolder(w http.ResponseWriter, r *http.Request) {
 	var c appengine.Context
@@ -90,17 +92,17 @@ func addFolder(w http.ResponseWriter, r *http.Request) {
 	var dao *DAO
 	var title string
 	var encodedParentKey string
+	var resultKey string
 	
 	c = appengine.NewContext(r)
 	u = user.Current(c)
 	dao = new(DAO)
 	
-	// フォームデータ取得
 	title = r.FormValue("folder_name")
 	encodedParentKey = r.FormValue("folder_key")
 	
-	// フォルダ新規作成
-	dao.RegisterFolder(c, u, title, false, encodedParentKey)
+	resultKey = dao.RegisterFolder(c, u, title, false, encodedParentKey)
+	fmt.Fprintf(w, `{"key":"%s"}`, resultKey)
 }
 
 /**
