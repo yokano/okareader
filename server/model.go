@@ -317,6 +317,38 @@ func (this *DAO) RegisterEntries(c appengine.Context, entries []*Entry, to strin
 }
 
 /**
+ * 指定されたフィードのエントリをすべて返す
+ * @methodOf DAO
+ * @param {appengine.Context} c コンテキスト
+ * @param {string} feedKey エンコード済みのフィードキー
+ * @returns {[]*Entry} エントリ配列
+ */
+func (this *DAO) GetEntries(c appengine.Context, feedKey string) []*Entry {
+	var feed *Atom
+	var entryKey string
+	var entry *Entry
+	var key *datastore.Key
+	var err error
+	var entries []*Entry
+	
+	entries = make([]*Entry, 0)
+	
+	feed = this.GetFeed(c, feedKey)
+	for _, entryKey = range feed.Entries {
+		key, err = datastore.DecodeKey(entryKey)
+		Check(c, err)
+		
+		entry = new(Entry)
+		err = datastore.Get(c, key, entry)
+		Check(c, err)
+		
+		entries = append(entries, entry)
+	}
+	
+	return entries
+}
+
+/**
  * フィードをデータストアから読み出す
  * @param {appengine.Context} c コンテキスト
  * @param {string} feedKey エンコード済みのフィードキー

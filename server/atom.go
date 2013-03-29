@@ -86,7 +86,6 @@ func (this *AtomTemplate) encode() (*Atom, []*Entry){
 		entry.Updated = entryTemplate.Updated
 		
 		entries = append(entries, entry)
-		atom.Entries = append(atom.Entries, entry.Id)
 	}
 	
 	// Atomの変換

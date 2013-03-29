@@ -69,20 +69,29 @@ func (this *View) ShowFolder(c appengine.Context, key string, w http.ResponseWri
  * フィードのエントリを一覧表示
  * @methodOf View
  * @param {appengine.Context} c コンテキスト
- * @param {string} key 表示するフィードのキー
+ * @param {string} feedKey 表示するフィードのキー
  * @param {http.ResponseWriter} w HTMLの出力先
  */
-func (this *View) ShowFeed(c appengine.Context, key string, w http.ResponseWriter) {
-
+func (this *View) ShowFeed(c appengine.Context, feedKey string, w http.ResponseWriter) {
+	var dao *DAO
+	var entries []*Entry
+	var t *template.Template
+	var err error
+	var contents map[string]interface{}
+	var feed *Atom
 	
-	// フィードを取得
+	dao = new(DAO)
+	feed = dao.GetFeed(c, feedKey)
+	entries = dao.GetEntries(c, feedKey)
 	
+	t, err = template.ParseFiles("server/html/feed.html")
+	Check(c, err)
 	
-	// エントリ一覧を取得
+	contents = make(map[string]interface{})
+	contents["Title"] = feed.Title
+	contents["Entries"] = entries
 	
-	// テンプレートを作成
-	
-	// 表示
+	t.Execute(w, contents)
 }
 
 /**

@@ -86,10 +86,18 @@ func folder(w http.ResponseWriter, r *http.Request) {
  * @function
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
- * @param {HTTP GET}
+ * @param {HTTP GET} key エンコード済みのフィードキー
  */
 func feed(w http.ResponseWriter, r *http.Request) {
+	var c appengine.Context
+	var view *View
+	var feedKey string
 	
+	c = appengine.NewContext(r)
+	feedKey = r.FormValue("key")
+	
+	view = new(View)
+	view.ShowFeed(c, feedKey, w)
 }
 
 /**

@@ -16,7 +16,7 @@
 			</div>
 			<div data-role="content">
 				<ul id="contents" data-role="listview" data-count-theme="c">
-					{{range .Children}}<li><a href="/{{.ItemType}}?key={{.Key}}">{{.Item.Title}}</a></li>{{end}}
+					{{range .Children}}<li><a href="/{{.ItemType}}?key={{.Key}}" data-transition="slide">{{.Item.Title}}</a></li>{{end}}
 				</ul>
 			</div>
 			<div data-role="footer" data-position="fixed">

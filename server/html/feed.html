@@ -9,13 +9,13 @@
 	</head>
 	<body>
 		<div data-role="page" class="feed_page">
-			<div data-role="header">
+			<div data-role="header" data-position="fixed">
 				<h1>FEED:{{.Title}}</h1>
 				<a href="#" data-icon="delete" class="ui-btn-right">ログアウト</a>
 			</div>
 			<div data-role="content">
 				<ul data-role="listview" data-count-theme="c">
-					{{range .Entries}}<li><a href="{{.Link.Href}}">{{.Title}}</a></li>{{end}}
+					{{range .Entries}}<li><a href="{{.Link}}" target="_blank">{{.Title}}</a></li>{{end}}
 				</ul>
 			</div>
 			<div data-role="footer" data-position="fixed">
