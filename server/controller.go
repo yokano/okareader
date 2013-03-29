@@ -56,7 +56,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 		if root.Type == "" {
 			key = dao.RegisterFolder(c, u, "root", true, "")
 		}
-		view.ShowFolder(c, key, w)
+		view.ShowFolder(c, key, "", w)
 	}
 }
 
@@ -67,17 +67,20 @@ func home(w http.ResponseWriter, r *http.Request) {
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
  * @param {HTTP GET} key エンコード済みのフォルダキー
+ * @param {HTTP GET} from 遷移前のフォルダのキー
  */
 func folder(w http.ResponseWriter, r *http.Request) {
 	var c appengine.Context
 	var view *View
 	var encodedKey string
+	var from string
 	
 	c = appengine.NewContext(r)
 	encodedKey = r.FormValue("key")
+	from = r.FormValue("from")
 
 	view = new(View)
-	view.ShowFolder(c, encodedKey, w)
+	view.ShowFolder(c, encodedKey, from, w)
 }
 
 /**
@@ -87,17 +90,20 @@ func folder(w http.ResponseWriter, r *http.Request) {
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
  * @param {HTTP GET} key エンコード済みのフィードキー
+ * @param {HTTP GET} from 遷移前のフォルダのキー
  */
 func feed(w http.ResponseWriter, r *http.Request) {
 	var c appengine.Context
 	var view *View
 	var feedKey string
+	var from string
 	
 	c = appengine.NewContext(r)
 	feedKey = r.FormValue("key")
+	from = r.FormValue("from")
 	
 	view = new(View)
-	view.ShowFeed(c, feedKey, w)
+	view.ShowFeed(c, feedKey, from, w)
 }
 
 /**

@@ -11,12 +11,15 @@
 	<body>
 		<div data-role="page" class="folder_page">
 			<div data-role="header" data-position="fixed">
+				{{if .From}}<a href="/folder?key={{.From}}" data-icon="back" data-transition="slide" data-direction="reverse">戻る</a>
+{{end}}
 				<h1>{{.Title}}</h1>
 				<a href="{{.LogoutURL}}" data-icon="delete" class="ui-btn-right">ログアウト</a>
 			</div>
 			<div data-role="content">
 				<ul id="contents" data-role="listview" data-count-theme="c">
-					{{range .Children}}<li><a href="/{{.ItemType}}?key={{.Key}}" data-transition="slide">{{.Item.Title}}</a></li>{{end}}
+					{{$from := .FolderKey}}
+					{{range .Children}}<li><a href="/{{.ItemType}}?key={{.Key}}&from={{$from}}" data-transition="slide">{{.Item.Title}}</a></li>{{end}}
 				</ul>
 			</div>
 			<div data-role="footer" data-position="fixed">
