@@ -33,12 +33,12 @@ type AtomTemplate struct {
  * @param c  コンテキスト
  * @param url atomファイルの場所
  */
-func (this *AtomTemplate) Get(c appengine.Context, url string) (*Atom, []*Entry) {
+func (this *AtomTemplate) Get(c appengine.Context, url string) (*Feed, []*Entry) {
 	var client *http.Client
 	var response *http.Response
 	var err error
 	var encoded []byte
-	var atom *Atom
+	var feed *Feed
 	var entries []*Entry
 	
 	// URLからatomを取得
@@ -56,24 +56,24 @@ func (this *AtomTemplate) Get(c appengine.Context, url string) (*Atom, []*Entry)
 	Check(c, err)
 	
 	// atomを変換
-	atom, entries = this.encode()
+	feed, entries = this.encode()
 	
-	return atom, entries
+	return feed, entries
 }
 
 /**
  * データストアに保存できる形式に変換する
  * @methodOf AtomTemplate
  * @returns entries {[]Entry} 変換後のエントリ
- * @returns atom {Atom} 変換後のAtom
+ * @returns feed {Feed} 変換後のFeed
  */
-func (this *AtomTemplate) encode() (*Atom, []*Entry){
-	var atom *Atom
+func (this *AtomTemplate) encode() (*Feed, []*Entry){
+	var feed *Feed
 	var entryTemplate *EntryTemplate
 	var entries []*Entry
 	var entry *Entry
-	atom = new(Atom)
-	atom.Entries = make([]string, 0)
+	feed = new(Feed)
+	feed.Entries = make([]string, 0)
 	entries = make([]*Entry, 0)
 	
 	// エントリの変換
@@ -89,8 +89,8 @@ func (this *AtomTemplate) encode() (*Atom, []*Entry){
 	}
 	
 	// Atomの変換
-	atom.Id = this.Id
-	atom.Title = this.Title
+	feed.Id = this.Id
+	feed.Title = this.Title
 	
-	return atom, entries
+	return feed, entries
 }

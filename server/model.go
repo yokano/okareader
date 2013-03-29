@@ -24,7 +24,7 @@ type Entry struct {
 	Updated string
 }
 
-type Atom struct {
+type Feed struct {
 	Id string
 	Title string
 	Entries []string
@@ -150,7 +150,7 @@ func (this *DAO) GetFolder(c appengine.Context, encodedKey string) *Folder {
  * @param {appengine.Context} c コンテキスト
  * @param {string} encodedKey アイテムのエンコード済みのキー
  * @returns {string} 取得したアイテムがフォルダなら"folder",フィードなら"feed"
- * @returns {*Folder or *Atom} 取得したフォルダまたはフィードオブジェクト
+ * @returns {*Folder or *Feed} 取得したフォルダまたはフィードオブジェクト
  */
 func (this *DAO) GetItem(c appengine.Context, encodedKey string) (string, interface{}) {
 	var key *datastore.Key
@@ -174,8 +174,8 @@ func (this *DAO) GetItem(c appengine.Context, encodedKey string) (string, interf
 	Check(c, err)
 	
 	if item.Type == "" {
-		// 要素はAtom
-		result = new(Atom)
+		// 要素はFeed
+		result = new(Feed)
 		result = item
 		itemType = "feed"
 	} else {
@@ -241,12 +241,12 @@ func (this *DAO) GetChildren(c appengine.Context, folder *Folder) []interface{} 
  * 既に存在するフィードは無視する
  * @methodOf DAO
  * @param {appengine.Context} c コンテキスト
- * @param {*Atom} feed 登録するフィードオブジェクト
+ * @param {*Feed} feed 登録するフィードオブジェクト
  * @param {string} to 追加先のフォルダのキー
  * @returns {string} 追加したフィードのキーをエンコードしたもの　重複していたら空文字列
  * @returnss {bool} 重複していた場合はtrue
  */
-func (this *DAO) RegisterFeed(c appengine.Context, atom *Atom, to string) (string, bool) {
+func (this *DAO) RegisterFeed(c appengine.Context, feed *Feed, to string) (string, bool) {
 	var key *datastore.Key
 	var encodedKey string
 	var err error
@@ -254,7 +254,7 @@ func (this *DAO) RegisterFeed(c appengine.Context, atom *Atom, to string) (strin
 	var parentFolder *Folder
 	var duplicated bool
 	
-	key = datastore.NewKey(c, "feed", atom.Id, 0, nil)
+	key = datastore.NewKey(c, "feed", feed.Id, 0, nil)
 	encodedKey = key.Encode()
 	
 	// 重複していたら登録しない
@@ -263,7 +263,7 @@ func (this *DAO) RegisterFeed(c appengine.Context, atom *Atom, to string) (strin
 		encodedKey = ""
 	} else {
 		// フィード保存
-		_, err = datastore.Put(c, key, atom)
+		_, err = datastore.Put(c, key, feed)
 		Check(c, err)
 		
 		// 親フォルダ取得
@@ -296,7 +296,7 @@ func (this *DAO) RegisterEntries(c appengine.Context, entries []*Entry, to strin
 	var result []string
 	var err error
 	var i int
-	var feed *Atom
+	var feed *Feed
 	var feedKey *datastore.Key
 	
 	feedKey, err = datastore.DecodeKey(to)
@@ -324,7 +324,7 @@ func (this *DAO) RegisterEntries(c appengine.Context, entries []*Entry, to strin
  * @returns {[]*Entry} エントリ配列
  */
 func (this *DAO) GetEntries(c appengine.Context, feedKey string) []*Entry {
-	var feed *Atom
+	var feed *Feed
 	var entryKey string
 	var entry *Entry
 	var key *datastore.Key
@@ -352,21 +352,21 @@ func (this *DAO) GetEntries(c appengine.Context, feedKey string) []*Entry {
  * フィードをデータストアから読み出す
  * @param {appengine.Context} c コンテキスト
  * @param {string} feedKey エンコード済みのフィードキー
- * @retruns {*Atom} フィード
+ * @retruns {*Feed} フィード
  */
-func (this *DAO) GetFeed(c appengine.Context, feedKey string) *Atom {
-	var atom *Atom
+func (this *DAO) GetFeed(c appengine.Context, feedKey string) *Feed {
+	var feed *Feed
 	var err error
 	var key *datastore.Key
 
-	atom = new(Atom)
+	feed = new(Feed)
 	key, err = datastore.DecodeKey(feedKey)
 	Check(c, err)
 	
-	err = datastore.Get(c, key, atom)
+	err = datastore.Get(c, key, feed)
 	Check(c, err)
 		
-	return atom
+	return feed
 }
 
 /**

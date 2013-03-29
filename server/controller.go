@@ -13,6 +13,10 @@ import(
 	"fmt"
 )
 
+type Controller struct {
+
+}
+
 /**
  * リクエストURLによる処理の振り分け
  * /api/*** はAjaxによるAPIへのアクセスであり画面の描画は不用
@@ -20,23 +24,44 @@ import(
  * @function
  */
 func init() {
-	http.HandleFunc("/", home)
-	http.HandleFunc("/folder", folder)
-	http.HandleFunc("/feed", feed)
-	http.HandleFunc("/test", atom_test)
-	http.HandleFunc("/api/addfolder", addFolder)
-	http.HandleFunc("/api/addfeed", addFeed)
+	var controller *Controller
+	controller = new(Controller)
+	
+	// ルートフォルダの表示
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		controller.home(w, r)
+	})
+	
+	// フォルダ画面
+	http.HandleFunc("/folder", func(w http.ResponseWriter, r *http.Request) {
+		controller.folder(w, r)
+	})
+	
+	// フィード画面
+	http.HandleFunc("/feed", func(w http.ResponseWriter, r *http.Request) {
+		controller.feed(w, r)
+	})
+	
+	// フォルダの追加API
+	http.HandleFunc("/api/addfolder", func(w http.ResponseWriter, r *http.Request) {
+		controller.addFolder(w, r)
+	})
+	
+	// フィードの追加API
+	http.HandleFunc("/api/addfeed", func(w http.ResponseWriter, r *http.Request) {
+		controller.addFeed(w, r)
+	})
 }
 
 /**
  * http://okareader.appspot.com/ へアクセスした時の処理
  * ログインしていなければログインさせる
  * ログインしていればルートフォルダを表示
- * @function
+ * @methodOf Controller
  * @param {http.ResponseWriter} 応答先
  * @param {*http.Request} リクエスト
  */
-func home(w http.ResponseWriter, r *http.Request) {
+func (this *Controller)home(w http.ResponseWriter, r *http.Request) {
 	var c appengine.Context
 	var u *user.User
 	var root *Folder
@@ -63,13 +88,13 @@ func home(w http.ResponseWriter, r *http.Request) {
 /**
  * http://okareader.appspot.com/folder へアクセスしたらフォルダを表示
  * フォルダをデータストアから取得するためのキーをGETで受け取る
- * @function
+ * @methodOf Controller
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
  * @param {HTTP GET} key エンコード済みのフォルダキー
  * @param {HTTP GET} from 遷移前のフォルダのキー
  */
-func folder(w http.ResponseWriter, r *http.Request) {
+func (this *Controller) folder(w http.ResponseWriter, r *http.Request) {
 	var c appengine.Context
 	var view *View
 	var encodedKey string
@@ -86,13 +111,13 @@ func folder(w http.ResponseWriter, r *http.Request) {
 /**
  * http://okareader.appspot.com/feed へアクセスしたらフィードを表示
  * フィードのキーはGETで渡される
- * @function
+ * @methodOf Controller
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
  * @param {HTTP GET} key エンコード済みのフィードキー
  * @param {HTTP GET} from 遷移前のフォルダのキー
  */
-func feed(w http.ResponseWriter, r *http.Request) {
+func (this *Controller) feed(w http.ResponseWriter, r *http.Request) {
 	var c appengine.Context
 	var view *View
 	var feedKey string
@@ -108,12 +133,12 @@ func feed(w http.ResponseWriter, r *http.Request) {
 
 /**
  * API:フォルダの新規追加
- * @function
+ * @methodOf Controller
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r HTTPリクエスト
  * @returns {AJAX:JSON} 追加したフォルダのキーを含むJSON
  */
-func addFolder(w http.ResponseWriter, r *http.Request) {
+func (this *Controller) addFolder(w http.ResponseWriter, r *http.Request) {
 	var c appengine.Context
 	var u *user.User
 	var dao *DAO
@@ -134,16 +159,16 @@ func addFolder(w http.ResponseWriter, r *http.Request) {
 
 /**
  * API:フィードの登録
- * @function
+ * @methodOf Controller
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
  */
-func addFeed(w http.ResponseWriter, r *http.Request) {
+func (this *Controller) addFeed(w http.ResponseWriter, r *http.Request) {
 	var url string
 	var folderKey string
 	var dao *DAO
 	var c appengine.Context
-	var atom *Atom
+	var feed *Feed
 	var atomTemplate *AtomTemplate
 	var entries []*Entry
 	var feedKey string
@@ -158,15 +183,15 @@ func addFeed(w http.ResponseWriter, r *http.Request) {
 	folderKey = r.FormValue("folder_key")
 
 	// フィード取得
-	atom, entries = atomTemplate.Get(c, url)
+	feed, entries = atomTemplate.Get(c, url)
 	
 	// フィード追加を試みる
-	feedKey, duplicated = dao.RegisterFeed(c, atom, folderKey)
+	feedKey, duplicated = dao.RegisterFeed(c, feed, folderKey)
 	if duplicated {
 		fmt.Fprintf(w, `{"duplicated":true}`)
 	} else {
 		dao.RegisterEntries(c, entries, feedKey)
-		fmt.Fprintf(w, `{"duplicated":false, "key":"%s", "name":"%s"}`, feedKey, atom.Title)
+		fmt.Fprintf(w, `{"duplicated":false, "key":"%s", "name":"%s"}`, feedKey, feed.Title)
 	}
 
 }

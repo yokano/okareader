@@ -82,7 +82,7 @@ func (this *View) ShowFeed(c appengine.Context, feedKey string, from string, w h
 	var t *template.Template
 	var err error
 	var contents map[string]interface{}
-	var feed *Atom
+	var feed *Feed
 	
 	dao = new(DAO)
 	feed = dao.GetFeed(c, feedKey)
