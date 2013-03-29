@@ -27,20 +27,6 @@ type AtomTemplate struct {
 	Owner string
 }
 
-type Entry struct {
-	Id string
-	Link string
-	Summary string
-	Title string
-	Updated string
-}
-
-type Atom struct {
-	Id string
-	Title string
-	Entries []string
-}
-
 /**
  * urlからatomファイルを受信して解析結果を返す
  * @function

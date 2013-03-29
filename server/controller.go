@@ -22,6 +22,7 @@ import(
 func init() {
 	http.HandleFunc("/", home)
 	http.HandleFunc("/folder", folder)
+	http.HandleFunc("/feed", feed)
 	http.HandleFunc("/test", atom_test)
 	http.HandleFunc("/api/addfolder", addFolder)
 	http.HandleFunc("/api/addfeed", addFeed)
@@ -65,7 +66,7 @@ func home(w http.ResponseWriter, r *http.Request) {
  * @function
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
- * @param {HTTP Get} key エンコード済みのフォルダキー
+ * @param {HTTP GET} key エンコード済みのフォルダキー
  */
 func folder(w http.ResponseWriter, r *http.Request) {
 	var c appengine.Context
@@ -77,6 +78,18 @@ func folder(w http.ResponseWriter, r *http.Request) {
 
 	view = new(View)
 	view.ShowFolder(c, encodedKey, w)
+}
+
+/**
+ * http://okareader.appspot.com/feed へアクセスしたらフィードを表示
+ * フィードのキーはGETで渡される
+ * @function
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ * @param {HTTP GET}
+ */
+func feed(w http.ResponseWriter, r *http.Request) {
+	
 }
 
 /**
@@ -109,27 +122,37 @@ func addFolder(w http.ResponseWriter, r *http.Request) {
  * API:フィードの登録
  * @function
  * @param {http.ResponseWriter} w 応答先
- * @param {*http.Request}
+ * @param {*http.Request} r リクエスト
  */
 func addFeed(w http.ResponseWriter, r *http.Request) {
-	 var url string
-	 var encodedParentKey string
-	 var dao *DAO
-	 var c appengine.Context
-	 var atom *Atom
-	 var atomTemplate *AtomTemplate
-	 
-	 c = appengine.NewContext(r)
-	 dao = new(DAO)
-	 atomTemplate = new(AtomTemplate)
-	 
-	 // フォームデータ取得
-	 url = r.FormValue("url")
-	 encodedParentKey = r.FormValue("folder_key")
-	 
-	 // フィード取得
-	 atom, _ = atomTemplate.Get(c, url)
-	 
-	 // フィード追加
-	 dao.RegisterFeed(c, atom, encodedParentKey)
+	var url string
+	var folderKey string
+	var dao *DAO
+	var c appengine.Context
+	var atom *Atom
+	var atomTemplate *AtomTemplate
+	var entries []*Entry
+	var feedKey string
+	var duplicated bool
+	
+	c = appengine.NewContext(r)
+	dao = new(DAO)
+	atomTemplate = new(AtomTemplate)
+
+	// フォームデータ取得
+	url = r.FormValue("url")
+	folderKey = r.FormValue("folder_key")
+
+	// フィード取得
+	atom, entries = atomTemplate.Get(c, url)
+	
+	// フィード追加を試みる
+	feedKey, duplicated = dao.RegisterFeed(c, atom, folderKey)
+	if duplicated {
+		fmt.Fprintf(w, `{"duplicated":true}`)
+	} else {
+		dao.RegisterEntries(c, entries, feedKey)
+		fmt.Fprintf(w, `{"duplicated":false, "key":"%s", "name":"%s"}`, feedKey, atom.Title)
+	}
+
 }

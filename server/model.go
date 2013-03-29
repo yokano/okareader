@@ -16,6 +16,20 @@ type Folder struct {
 	Owner string
 }
 
+type Entry struct {
+	Id string
+	Link string
+	Summary string
+	Title string
+	Updated string
+}
+
+type Atom struct {
+	Id string
+	Title string
+	Entries []string
+}
+
 // DAO
 type DAO struct {
 }
@@ -135,9 +149,10 @@ func (this *DAO) GetFolder(c appengine.Context, encodedKey string) *Folder {
  * @methodOf DAO
  * @param {appengine.Context} c コンテキスト
  * @param {string} encodedKey アイテムのエンコード済みのキー
+ * @returns {string} 取得したアイテムがフォルダなら"folder",フィードなら"feed"
  * @returns {*Folder or *Atom} 取得したフォルダまたはフィードオブジェクト
  */
-func (this *DAO) GetItem(c appengine.Context, encodedKey string) interface{} {
+func (this *DAO) GetItem(c appengine.Context, encodedKey string) (string, interface{}) {
 	var key *datastore.Key
 	var err error
 	type Item struct {
@@ -149,6 +164,7 @@ func (this *DAO) GetItem(c appengine.Context, encodedKey string) interface{} {
 	}
 	var item *Item
 	var result interface{}
+	var itemType string
 	
 	key, err = datastore.DecodeKey(encodedKey)
 	Check(c, err)
@@ -161,13 +177,15 @@ func (this *DAO) GetItem(c appengine.Context, encodedKey string) interface{} {
 		// 要素はAtom
 		result = new(Atom)
 		result = item
+		itemType = "feed"
 	} else {
 		// 要素はフォルダ
 		result = new(Folder)
 		result = item
+		itemType = "folder"
 	}
 	
-	return result
+	return itemType, result
 }
 
 /**
@@ -220,39 +238,48 @@ func (this *DAO) GetChildren(c appengine.Context, folder *Folder) []interface{} 
 
 /**
  * フィードをデータストアに追加
- * 既に存在するものは上書きされる
+ * 既に存在するフィードは無視する
  * @methodOf DAO
  * @param {appengine.Context} c コンテキスト
  * @param {*Atom} feed 登録するフィードオブジェクト
  * @param {string} to 追加先のフォルダのキー
- * @returns {string} 追加したフィードのキーをエンコードしたもの
+ * @returns {string} 追加したフィードのキーをエンコードしたもの　重複していたら空文字列
+ * @returnss {bool} 重複していた場合はtrue
  */
-func (this *DAO) RegisterFeed(c appengine.Context, atom *Atom, to string) string {
+func (this *DAO) RegisterFeed(c appengine.Context, atom *Atom, to string) (string, bool) {
 	var key *datastore.Key
 	var encodedKey string
 	var err error
 	var parentFolderKey *datastore.Key
 	var parentFolder *Folder
+	var duplicated bool
 	
-	// フィード保存
 	key = datastore.NewKey(c, "feed", atom.Id, 0, nil)
-	key, err = datastore.Put(c, key, atom)
-	Check(c, err)
 	encodedKey = key.Encode()
 	
-	// 親フォルダ取得
-	parentFolderKey, err = datastore.DecodeKey(to)
-	Check(c, err)
-	parentFolder = new(Folder)
-	err = datastore.Get(c, parentFolderKey, parentFolder)
-	Check(c, err)
+	// 重複していたら登録しない
+	duplicated = this.Exist(c, encodedKey)
+	if duplicated {
+		encodedKey = ""
+	} else {
+		// フィード保存
+		_, err = datastore.Put(c, key, atom)
+		Check(c, err)
+		
+		// 親フォルダ取得
+		parentFolderKey, err = datastore.DecodeKey(to)
+		Check(c, err)
+		parentFolder = new(Folder)
+		err = datastore.Get(c, parentFolderKey, parentFolder)
+		Check(c, err)
+		
+		// 親フォルダの子に追加
+		parentFolder.Children = append(parentFolder.Children, encodedKey)
+		_, err = datastore.Put(c, parentFolderKey, parentFolder)
+		Check(c, err)
+	}
 	
-	// 親フォルダの子に追加
-	parentFolder.Children = append(parentFolder.Children, encodedKey)
-	_, err = datastore.Put(c, parentFolderKey, parentFolder)
-	Check(c, err)
-	
-	return encodedKey
+	return encodedKey, duplicated
 }
 
 /**
@@ -261,35 +288,79 @@ func (this *DAO) RegisterFeed(c appengine.Context, atom *Atom, to string) string
  * @param {appengine.Context} c コンテキスト
  * @param {[]*Entry} entries 追加するエントリ配列
  * @param {string} to 追加先のフィードのキー
+ * @returns {[]string} 追加したエントリのキー配列
  */
-func (this *DAO) RegisterEntries(c appengine.Context, entries []*Entry, to string) {
-	// エントリ保存
-//	for _, entry_db = range entries_db {
-//		key = datastore.NewKey(c, "entry", entry_db.Id, 0, nil)
-//		_, err = datastore.Put(c, key, entry_db)
-//		Check(c, err)
-//	}
+func (this *DAO) RegisterEntries(c appengine.Context, entries []*Entry, to string) []string {
+	var entry *Entry
+	var key *datastore.Key
+	var result []string
+	var err error
+	var i int
+	var feed *Atom
+	var feedKey *datastore.Key
+	
+	feedKey, err = datastore.DecodeKey(to)
+	feed = this.GetFeed(c, to)
+	
+	result = make([]string, len(entries))
+	for i, entry = range entries {
+		key = datastore.NewKey(c, "entry", entry.Id, 0, nil)
+		_, err = datastore.Put(c, key, entry)
+		Check(c, err)
+		result[i] = key.Encode()
+		feed.Entries = append(feed.Entries, result[i])
+	}
+	
+	_, err = datastore.Put(c, feedKey, feed)
+	
+	return result
 }
 
 /**
  * フィードをデータストアから読み出す
- * @param c {appengine.Context} コンテキスト
- * @param id {string} フィードのID
- * @retruns {*Atom} 読みだしたフィード
+ * @param {appengine.Context} c コンテキスト
+ * @param {string} feedKey エンコード済みのフィードキー
+ * @retruns {*Atom} フィード
  */
-func (this *DAO) GetFeed(c appengine.Context, id string) *Atom {
+func (this *DAO) GetFeed(c appengine.Context, feedKey string) *Atom {
 	var atom *Atom
 	var err error
-	var query *datastore.Query
-	var iterator *datastore.Iterator
+	var key *datastore.Key
 
 	atom = new(Atom)
+	key, err = datastore.DecodeKey(feedKey)
+	Check(c, err)
 	
-	// フィードを読み込む
-	query = datastore.NewQuery("feed").Filter("Id =", id)
-	iterator = query.Run(c)
-	_, err = iterator.Next(atom)
+	err = datastore.Get(c, key, atom)
 	Check(c, err)
 		
 	return atom
+}
+
+/**
+ * 指定されたキーのデータが既に存在するか調べる
+ * フィードやエントリなど重複させたくないデータはこの関数を使ってチェックする
+ * @methodOf DAO
+ * @param {appengine.Context} c コンテキスト
+ * @param {string} encodedKey エンコード済みのキー
+ * @returns {bool} 重複していたらtrue
+ */
+func (this *DAO) Exist(c appengine.Context, encodedKey string) bool {
+	var result bool
+	var key *datastore.Key
+	var item interface{}
+	var err error
+	
+	key, err = datastore.DecodeKey(encodedKey)
+	Check(c, err)
+	
+	item = new(interface{})
+	err = datastore.Get(c, key, item)
+	if err == datastore.ErrNoSuchEntity {
+		result = false
+	} else {
+		result = true
+	}
+	
+	return result
 }

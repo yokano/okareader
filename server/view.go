@@ -10,7 +10,6 @@ import (
 	"appengine"
 	"appengine/user"
 	"net/http"
-//	"log"
 )
 
 /**
@@ -31,6 +30,7 @@ func (this *View) ShowFolder(c appengine.Context, key string, w http.ResponseWri
 	type ListItem struct {
 		Key string
 		Item interface{}
+		ItemType string
 	}
 	var contents map[string]interface{}
 	var err error
@@ -55,7 +55,7 @@ func (this *View) ShowFolder(c appengine.Context, key string, w http.ResponseWri
 	for i, key = range folder.Children {
 		children[i] = new(ListItem)
 		children[i].Key = key
-		children[i].Item = dao.GetItem(c, key)
+		children[i].ItemType, children[i].Item = dao.GetItem(c, key)
 	}
 	contents["Children"] = children
 	
@@ -63,6 +63,26 @@ func (this *View) ShowFolder(c appengine.Context, key string, w http.ResponseWri
 	Check(c, err)
 	
 	t.Execute(w, contents)
+}
+
+/**
+ * フィードのエントリを一覧表示
+ * @methodOf View
+ * @param {appengine.Context} c コンテキスト
+ * @param {string} key 表示するフィードのキー
+ * @param {http.ResponseWriter} w HTMLの出力先
+ */
+func (this *View) ShowFeed(c appengine.Context, key string, w http.ResponseWriter) {
+
+	
+	// フィードを取得
+	
+	
+	// エントリ一覧を取得
+	
+	// テンプレートを作成
+	
+	// 表示
 }
 
 /**

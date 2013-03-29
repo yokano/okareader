@@ -1,19 +1,18 @@
+/**
+ * 汎用関数
+ */
 package okareader
 import (
 	"appengine"
 )
 
-/*
-	関数 Check(c, err)
-	- エラーが発生していたらコンソールへ出力する
-	
-	引数
-	- c : コンソール出力用コンテキスト
-	- err : error型　他の関数から渡されるエラー変数
-	
-	戻り値
-	- なし
-*/
+/**
+ * エラーチェック
+ * エラーがあればコンソールに出力する
+ * @func
+ * @param {appengine.Context} c コンテキスト
+ * @param {error} err チェックするエラーオブジェクト
+ */
 func Check(c appengine.Context, err error) {
 	if err != nil {
 		c.Errorf(err.Error())

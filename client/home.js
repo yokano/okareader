@@ -1,5 +1,7 @@
 /**
  * フォルダ画面のJavaScript
+ * ボタンを押した時のポップアップ操作や
+ * サーバのAPIを呼び出しを行う
  */
 $('.folder_page').live('pageinit', function() {
 	var contents = $(this).find('#contents');
@@ -42,7 +44,13 @@ $('.folder_page').live('pageinit', function() {
 				url: url,
 				folder_key: folderKey.val()
 			},
-			success: function() {
+			dataType: 'json',
+			success: function(data) {
+				if(data.duplicated) {
+					alert('既に登録済みのフィードです')
+				} else {
+					contents.append($('<li><a href="/feed?key=' + data.key + '">' + data.name + '</a></li>')).listview('refresh');
+				}
 				addFeed.popup('close');
 				feedURL.val('');
 			},

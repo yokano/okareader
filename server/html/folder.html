@@ -16,7 +16,7 @@
 			</div>
 			<div data-role="content">
 				<ul id="contents" data-role="listview" data-count-theme="c">
-					{{range .Children}}<li><a href="/folder?key={{.Key}}">{{.Item.Title}}</a></li>{{end}}
+					{{range .Children}}<li><a href="/{{.ItemType}}?key={{.Key}}">{{.Item.Title}}</a></li>{{end}}
 				</ul>
 			</div>
 			<div data-role="footer" data-position="fixed">
@@ -43,7 +43,7 @@
 				
 				<div data-role="popup" id="add_feed" data-theme="a" style="padding: 10px 20px;">
 					<label>配信URL(Atom)</label>
-					<input type="text" id="feed_url"></inpu>
+					<input type="text" id="feed_url">val="http://feed.rssad.jp/rss/gigazine/rss_atom"</input>
 					<input id="add_feed_button" type="button" value="追加する" data-theme="c"></input>
 				</div>
 			</div>
