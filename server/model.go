@@ -396,3 +396,27 @@ func (this *DAO) Exist(c appengine.Context, encodedKey string) bool {
 	
 	return result
 }
+
+/**
+ * すべてのデータを削除する
+ * デバッグ用
+ * @methodOf DAO
+ * @param {appengine.Context} c
+ */
+func (this *DAO) clear(c appengine.Context) {
+	var keys []*datastore.Key
+	var query *datastore.Query
+	var err error
+	var kinds [3]string
+	var kind string
+
+	keys = make([]*datastore.Key, 0)
+	kinds = [3]string{"folder", "feed", "entry"}
+	
+	for _, kind = range kinds {
+		query = datastore.NewQuery(kind).KeysOnly()
+		keys, err = query.GetAll(c, nil)
+		Check(c, err)
+		datastore.DeleteMulti(c, keys)
+	}
+}

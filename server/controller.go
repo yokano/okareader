@@ -11,6 +11,9 @@ import(
 	"appengine/user"
 	"net/http"
 	"fmt"
+	"appengine/urlfetch"
+	"encoding/xml"
+	"log"
 )
 
 type Controller struct {
@@ -50,6 +53,11 @@ func init() {
 	// フィードの追加API
 	http.HandleFunc("/api/addfeed", func(w http.ResponseWriter, r *http.Request) {
 		controller.addFeed(w, r)
+	})
+	
+	// データ削除
+	http.HandleFunc("/clear", func(w http.ResponseWriter, r *http.Request) {
+		controller.clear(w, r)
 	})
 }
 
@@ -173,17 +181,24 @@ func (this *Controller) addFeed(w http.ResponseWriter, r *http.Request) {
 	var entries []*Entry
 	var feedKey string
 	var duplicated bool
+	var xml []byte
+	var feedType string
 	
 	c = appengine.NewContext(r)
 	dao = new(DAO)
 	atomTemplate = new(AtomTemplate)
-
+	
 	// フォームデータ取得
 	url = r.FormValue("url")
 	folderKey = r.FormValue("folder_key")
-
+	
 	// フィード取得
 	feed, entries = atomTemplate.Get(c, url)
+	
+	// XML取得
+	xml = this.getXML(c, url)
+	feedType = this.getType(c, xml)
+	log.Printf("TYPE:%s", feedType)
 	
 	// フィード追加を試みる
 	feedKey, duplicated = dao.RegisterFeed(c, feed, folderKey)
@@ -193,5 +208,69 @@ func (this *Controller) addFeed(w http.ResponseWriter, r *http.Request) {
 		dao.RegisterEntries(c, entries, feedKey)
 		fmt.Fprintf(w, `{"duplicated":false, "key":"%s", "name":"%s"}`, feedKey, feed.Title)
 	}
+}
 
+/**
+ * 指定されたURLからXMLファイルを受信して返す
+ * @methodOf Controller
+ * @param {appengine.Context} c コンテキスト
+ * @param {string} url URL
+ * @returns {[]byte} 受信したXMLデータ
+ */
+func (this *Controller) getXML(c appengine.Context, url string) []byte {
+	var client *http.Client
+	var response *http.Response
+	var err error
+	var result []byte
+	
+	client = urlfetch.Client(c)
+	response, err = client.Get(url)
+	Check(c, err)
+	
+	result = make([]byte, response.ContentLength)
+	_, err = response.Body.Read(result)
+	Check(c, err)
+	
+	return result
+}
+
+/**
+ * XMLデータの規格を判断する
+ * @methodOf Controller
+ * @param {[]byte} bytes XMLデータ
+ * @returns フィードの規格(RSS1.0 / RSS2.0 / Atom / etc)
+ */
+func (this *Controller) getType(c appengine.Context, bytes []byte) string {
+	type Checker struct {
+		rdf xml.Name `xml:"rdf"`
+		rss xml.Name `xml:"rss`
+		feed xml.Name `xml:"feed"`
+	}
+	var checker *Checker
+	var err error
+	
+	checker = new(Checker)
+	
+	err = xml.Unmarshal(bytes, checker)
+	Check(c, err)
+	
+	log.Printf("RDF:%s\n", checker.rdf)
+	log.Printf("RSS:%s\n", checker.rss)
+	log.Printf("FEED:%s\n", checker.feed)
+	
+	return ""
+}
+
+/**
+ * データを削除する
+ * @methodOf Controller
+ * @param {http.ResponseWriter} w 応答先
+ * @param {http.Request} r リクエスト
+ */
+func (this *Controller) clear(w http.ResponseWriter, r *http.Request) {
+	var c appengine.Context
+	var dao *DAO
+	c = appengine.NewContext(r)
+	dao = new(DAO)
+	dao.clear(c)
 }
