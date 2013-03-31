@@ -203,6 +203,9 @@ func (this *Controller) addFeed(w http.ResponseWriter, r *http.Request) {
 			rss2 = new(RSS2)
 			feed, entries = rss2.encode(c, xml)
 		case "RSS1.0":
+			var rss1 *RSS1
+			rss1 = new(RSS1)
+			feed, entries = rss1.encode(c, xml)
 		case "etc":
 			
 	}
@@ -264,12 +267,12 @@ func (this *Controller) getType(c appengine.Context, bytes []byte) string {
 			result = "Atom"
 		case "rss":
 			result = "RSS2.0"
-		case "rdf":
+		case "RDF":
 			result = "RSS1.0"
 		default:
 			result = "etc"
 	}
-	
+
 	return result
 }
 

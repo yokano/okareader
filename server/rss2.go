@@ -13,20 +13,6 @@ type RSS2 struct {
 
 }
 
-type Item struct {
-	Title string `xml:"title"`
-	Link string `xml:"link"`
-	Description string `xml:"description"`
-	Date string `xml:"date"`
-}
-
-type Channel struct {
-	Title string `xml:"channel>title"`
-	Link string `xml:"channel>link"`
-	Date string `xml:"channel>date"`
-	Item []*Item `xml:"channel>item"`
-}
-
 /**
  * xmlをFeedオブジェクトに変換する
  * @methodOf RSS2
@@ -36,6 +22,18 @@ type Channel struct {
  * @returns {[]*Entry} 変換結果のエントリ
  */
 func (this *RSS2) encode(c appengine.Context, xmldata []byte) (*Feed, []*Entry) {
+	type Item struct {
+		Title string `xml:"title"`
+		Link string `xml:"link"`
+		Description string `xml:"description"`
+		Date string `xml:"date"`
+	}
+	type Channel struct {
+		Title string `xml:"channel>title"`
+		Link string `xml:"channel>link"`
+		Date string `xml:"channel>date"`
+		Item []*Item `xml:"channel>item"`
+	}
 	var feed *Feed
 	var entries []*Entry
 	var channel *Channel
@@ -46,7 +44,6 @@ func (this *RSS2) encode(c appengine.Context, xmldata []byte) (*Feed, []*Entry) 
 	channel = new(Channel)
 	err = xml.Unmarshal(xmldata, channel)
 	Check(c, err)
-	
 	
 	feed = new(Feed)
 	feed.Id = channel.Link

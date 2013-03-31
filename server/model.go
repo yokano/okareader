@@ -29,7 +29,6 @@ type Feed struct {
 	Entries []string
 }
 
-// DAO
 type DAO struct {
 }
 
@@ -387,6 +386,7 @@ func (this *DAO) Exist(c appengine.Context, encodedKey string) bool {
 	
 	item = new(interface{})
 	err = datastore.Get(c, key, item)
+	Check(c, err)
 	if err == datastore.ErrNoSuchEntity {
 		result = false
 	} else {
