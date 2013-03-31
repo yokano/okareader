@@ -14,7 +14,6 @@ type EntryTemplate struct {
 	Link struct {
 		Href string `xml:"href,attr"`
 	} `xml:"link"`
-	Summary string `xml:"summary"`
 	Title string `xml:"title"`
 	Updated string `xml:"updated"`
 	Owner string
@@ -81,7 +80,6 @@ func (this *AtomTemplate) encode() (*Feed, []*Entry){
 		entry = new(Entry)
 		entry.Id = entryTemplate.Id
 		entry.Link = entryTemplate.Link.Href
-		entry.Summary = entryTemplate.Summary
 		entry.Title = entryTemplate.Title
 		entry.Updated = entryTemplate.Updated
 		

@@ -19,7 +19,6 @@ type Folder struct {
 type Entry struct {
 	Id string
 	Link string
-	Summary string
 	Title string
 	Updated string
 }

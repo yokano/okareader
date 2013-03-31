@@ -1,29 +1,65 @@
 /**
  * RSS2.0の読み込み
+ * xmlデータを受け取ってFeedとEntryリストを返す
  */
 package okareader
 
 import(
-
+	"appengine"
+	"encoding/xml"
 )
-
-//type Entry struct {
-//	Id string
-//	Link string
-//	Summary string
-//	Title string
-//	Updated string
-//}
-//
-//type Feed struct {
-//	Id string
-//	Title string
-//	Entries []string
-//}
-
 
 type RSS2 struct {
 
 }
 
+type Item struct {
+	Title string `xml:"title"`
+	Link string `xml:"link"`
+	Description string `xml:"description"`
+	Date string `xml:"date"`
+}
 
+type Channel struct {
+	Title string `xml:"channel>title"`
+	Link string `xml:"channel>link"`
+	Date string `xml:"channel>date"`
+	Item []*Item `xml:"channel>item"`
+}
+
+/**
+ * xmlをFeedオブジェクトに変換する
+ * @methodOf RSS2
+ * @param {appengine.Context} c コンテキスト
+ * @param {[]byte} xmldata 変換するXMLデータ
+ * @returns {*Feed} 変換結果のフィード
+ * @returns {[]*Entry} 変換結果のエントリ
+ */
+func (this *RSS2) encode(c appengine.Context, xmldata []byte) (*Feed, []*Entry) {
+	var feed *Feed
+	var entries []*Entry
+	var channel *Channel
+	var err error
+	var item *Item
+	var i int
+	
+	channel = new(Channel)
+	err = xml.Unmarshal(xmldata, channel)
+	Check(c, err)
+	
+	
+	feed = new(Feed)
+	feed.Id = channel.Link
+	feed.Title = channel.Title
+	
+	entries = make([]*Entry, len(channel.Item))
+	for i, item = range channel.Item {
+		entries[i] = new(Entry)
+		entries[i].Id = item.Link
+		entries[i].Title = item.Title
+		entries[i].Updated = item.Date
+		entries[i].Link = item.Link
+	}
+	
+	return feed, entries
+}

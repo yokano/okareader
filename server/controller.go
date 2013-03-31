@@ -16,7 +16,6 @@ import(
 )
 
 type Controller struct {
-
 }
 
 /**
@@ -176,7 +175,6 @@ func (this *Controller) addFeed(w http.ResponseWriter, r *http.Request) {
 	var dao *DAO
 	var c appengine.Context
 	var feed *Feed
-	var atomTemplate *AtomTemplate
 	var entries []*Entry
 	var feedKey string
 	var duplicated bool
@@ -185,18 +183,29 @@ func (this *Controller) addFeed(w http.ResponseWriter, r *http.Request) {
 	
 	c = appengine.NewContext(r)
 	dao = new(DAO)
-	atomTemplate = new(AtomTemplate)
 	
 	// フォームデータ取得
 	url = r.FormValue("url")
 	folderKey = r.FormValue("folder_key")
 	
-	// フィード取得
-	feed, entries = atomTemplate.Get(c, url)
-	
 	// XML取得
 	xml = this.getXML(c, url)
+	
+	// フィード取得
 	feedType = this.getType(c, xml)
+	switch feedType {
+		case "Atom":
+			var atomTemplate *AtomTemplate
+			atomTemplate = new(AtomTemplate)
+			feed, entries = atomTemplate.Get(c, url)
+		case "RSS2.0":
+			var rss2 *RSS2
+			rss2 = new(RSS2)
+			feed, entries = rss2.encode(c, xml)
+		case "RSS1.0":
+		case "etc":
+			
+	}
 	
 	// フィード追加を試みる
 	feedKey, duplicated = dao.RegisterFeed(c, feed, folderKey)
@@ -236,7 +245,7 @@ func (this *Controller) getXML(c appengine.Context, url string) []byte {
  * XMLデータの規格を判断する
  * @methodOf Controller
  * @param {[]byte} bytes XMLデータ
- * @returns フィードの規格(RSS1.0 / RSS2.0 / Atom / etc)
+ * @returns {string} フィードの規格(RSS1.0 / RSS2.0 / Atom / etc)
  */
 func (this *Controller) getType(c appengine.Context, bytes []byte) string {
 	type Checker struct {
