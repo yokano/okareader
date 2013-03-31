@@ -13,7 +13,6 @@ import(
 	"fmt"
 	"appengine/urlfetch"
 	"encoding/xml"
-	"log"
 )
 
 type Controller struct {
@@ -198,7 +197,6 @@ func (this *Controller) addFeed(w http.ResponseWriter, r *http.Request) {
 	// XML取得
 	xml = this.getXML(c, url)
 	feedType = this.getType(c, xml)
-	log.Printf("TYPE:%s", feedType)
 	
 	// フィード追加を試みる
 	feedKey, duplicated = dao.RegisterFeed(c, feed, folderKey)
@@ -242,23 +240,28 @@ func (this *Controller) getXML(c appengine.Context, url string) []byte {
  */
 func (this *Controller) getType(c appengine.Context, bytes []byte) string {
 	type Checker struct {
-		rdf xml.Name `xml:"rdf"`
-		rss xml.Name `xml:"rss`
-		feed xml.Name `xml:"feed"`
+		XMLName xml.Name
 	}
 	var checker *Checker
 	var err error
+	var result string
 	
 	checker = new(Checker)
-	
 	err = xml.Unmarshal(bytes, checker)
 	Check(c, err)
 	
-	log.Printf("RDF:%s\n", checker.rdf)
-	log.Printf("RSS:%s\n", checker.rss)
-	log.Printf("FEED:%s\n", checker.feed)
+	switch checker.XMLName.Local {
+		case "feed":
+			result = "Atom"
+		case "rss":
+			result = "RSS2.0"
+		case "rdf":
+			result = "RSS1.0"
+		default:
+			result = "etc"
+	}
 	
-	return ""
+	return result
 }
 
 /**
@@ -273,4 +276,5 @@ func (this *Controller) clear(w http.ResponseWriter, r *http.Request) {
 	c = appengine.NewContext(r)
 	dao = new(DAO)
 	dao.clear(c)
+	this.home(w, r)
 }

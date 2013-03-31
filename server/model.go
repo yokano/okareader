@@ -409,7 +409,7 @@ func (this *DAO) clear(c appengine.Context) {
 	var err error
 	var kinds [3]string
 	var kind string
-
+	
 	keys = make([]*datastore.Key, 0)
 	kinds = [3]string{"folder", "feed", "entry"}
 	
