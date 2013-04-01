@@ -44,7 +44,7 @@ func (this *RSS1) encode(c appengine.Context, xmldata []byte) (*Feed, []*Entry) 
 	
 	rdf = new(RDF)
 	err = xml.Unmarshal(xmldata, rdf)
-	Check(c, err)
+	check(c, err)
 	
 	feed = new(Feed)
 	feed.Id = rdf.Channel.About

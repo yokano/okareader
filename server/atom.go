@@ -32,7 +32,7 @@ type AtomTemplate struct {
  * @param c  コンテキスト
  * @param url atomファイルの場所
  */
-func (this *AtomTemplate) Get(c appengine.Context, url string) (*Feed, []*Entry) {
+func (this *AtomTemplate) get(c appengine.Context, url string) (*Feed, []*Entry) {
 	var client *http.Client
 	var response *http.Response
 	var err error
@@ -43,16 +43,16 @@ func (this *AtomTemplate) Get(c appengine.Context, url string) (*Feed, []*Entry)
 	// URLからatomを取得
 	client = urlfetch.Client(c)
 	response, err = client.Get(url)
-	Check(c, err)
+	check(c, err)
 	
 	// atomを受信
 	encoded = make([]byte, response.ContentLength)
 	_, err = response.Body.Read(encoded)
-	Check(c, err)
+	check(c, err)
 	
 	// atomを解析
 	err = xml.Unmarshal(encoded, this)
-	Check(c, err)
+	check(c, err)
 	
 	// atomを変換
 	feed, entries = this.encode()

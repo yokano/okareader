@@ -67,7 +67,7 @@ func init() {
  * @param {http.ResponseWriter} 応答先
  * @param {*http.Request} リクエスト
  */
-func (this *Controller)home(w http.ResponseWriter, r *http.Request) {
+func (this *Controller) home(w http.ResponseWriter, r *http.Request) {
 	var c appengine.Context
 	var u *user.User
 	var root *Folder
@@ -81,13 +81,13 @@ func (this *Controller)home(w http.ResponseWriter, r *http.Request) {
 	view = new(View)
 	
 	if u == nil {
-		view.ShowLogin(c, w)
+		view.showLogin(c, w)
 	} else {
-		key, root = dao.GetRootFolder(c, u)
+		key, root = dao.getRootFolder(c, u)
 		if root.Type == "" {
-			key = dao.RegisterFolder(c, u, "root", true, "")
+			key = dao.registerFolder(c, u, "root", true, "")
 		}
-		view.ShowFolder(c, key, "", w)
+		view.showFolder(c, key, "", w)
 	}
 }
 
@@ -111,7 +111,7 @@ func (this *Controller) folder(w http.ResponseWriter, r *http.Request) {
 	from = r.FormValue("from")
 
 	view = new(View)
-	view.ShowFolder(c, encodedKey, from, w)
+	view.showFolder(c, encodedKey, from, w)
 }
 
 /**
@@ -134,7 +134,7 @@ func (this *Controller) feed(w http.ResponseWriter, r *http.Request) {
 	from = r.FormValue("from")
 	
 	view = new(View)
-	view.ShowFeed(c, feedKey, from, w)
+	view.showFeed(c, feedKey, from, w)
 }
 
 /**
@@ -159,7 +159,7 @@ func (this *Controller) addFolder(w http.ResponseWriter, r *http.Request) {
 	title = r.FormValue("folder_name")
 	encodedParentKey = r.FormValue("folder_key")
 	
-	resultKey = dao.RegisterFolder(c, u, title, false, encodedParentKey)
+	resultKey = dao.registerFolder(c, u, title, false, encodedParentKey)
 	fmt.Fprintf(w, `{"key":"%s"}`, resultKey)
 }
 
@@ -197,7 +197,7 @@ func (this *Controller) addFeed(w http.ResponseWriter, r *http.Request) {
 		case "Atom":
 			var atomTemplate *AtomTemplate
 			atomTemplate = new(AtomTemplate)
-			feed, entries = atomTemplate.Get(c, url)
+			feed, entries = atomTemplate.get(c, url)
 		case "RSS2.0":
 			var rss2 *RSS2
 			rss2 = new(RSS2)
@@ -211,11 +211,11 @@ func (this *Controller) addFeed(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	// フィード追加を試みる
-	feedKey, duplicated = dao.RegisterFeed(c, feed, folderKey)
+	feedKey, duplicated = dao.registerFeed(c, feed, folderKey)
 	if duplicated {
 		fmt.Fprintf(w, `{"duplicated":true}`)
 	} else {
-		dao.RegisterEntries(c, entries, feedKey)
+		dao.registerEntries(c, entries, feedKey)
 		fmt.Fprintf(w, `{"duplicated":false, "key":"%s", "name":"%s"}`, feedKey, feed.Title)
 	}
 }
@@ -235,11 +235,11 @@ func (this *Controller) getXML(c appengine.Context, url string) []byte {
 	
 	client = urlfetch.Client(c)
 	response, err = client.Get(url)
-	Check(c, err)
+	check(c, err)
 	
 	result = make([]byte, response.ContentLength)
 	_, err = response.Body.Read(result)
-	Check(c, err)
+	check(c, err)
 	
 	return result
 }
@@ -260,7 +260,7 @@ func (this *Controller) getType(c appengine.Context, bytes []byte) string {
 	
 	checker = new(Checker)
 	err = xml.Unmarshal(bytes, checker)
-	Check(c, err)
+	check(c, err)
 	
 	switch checker.XMLName.Local {
 		case "feed":

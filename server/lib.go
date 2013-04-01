@@ -13,7 +13,7 @@ import (
  * @param {appengine.Context} c コンテキスト
  * @param {error} err チェックするエラーオブジェクト
  */
-func Check(c appengine.Context, err error) {
+func check(c appengine.Context, err error) {
 	if err != nil {
 		c.Errorf(err.Error())
 	}

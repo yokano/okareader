@@ -27,7 +27,7 @@ type View struct {
  * @param {string} from 遷移前のフォルダのキー
  * @param {http.ResponseWriter} w HTMLの出力先
  */
-func (this *View) ShowFolder(c appengine.Context, key string, from string, w http.ResponseWriter) {
+func (this *View) showFolder(c appengine.Context, key string, from string, w http.ResponseWriter) {
 	type ListItem struct {
 		Key string
 		Item interface{}
@@ -45,25 +45,25 @@ func (this *View) ShowFolder(c appengine.Context, key string, from string, w htt
 	
 	contents = make(map[string]interface{}, 0)
 	contents["LogoutURL"], err = user.LogoutURL(c, "/")
-	Check(c, err)
+	check(c, err)
 
 	contents["FolderKey"] = key
 	contents["From"] = from
 	
 	folder = new(Folder)
-	folder = dao.GetFolder(c, key)
+	folder = dao.getFolder(c, key)
 	contents["Title"] = folder.Title
 	
 	children = make([]*ListItem, len(folder.Children))
 	for i, key = range folder.Children {
 		children[i] = new(ListItem)
 		children[i].Key = key
-		children[i].ItemType, children[i].Item = dao.GetItem(c, key)
+		children[i].ItemType, children[i].Item = dao.getItem(c, key)
 	}
 	contents["Children"] = children
 	
 	t, err = template.ParseFiles("server/html/folder.html")
-	Check(c, err)
+	check(c, err)
 	
 	t.Execute(w, contents)
 }
@@ -76,7 +76,7 @@ func (this *View) ShowFolder(c appengine.Context, key string, from string, w htt
  * @param {string} from 遷移前のフォルダのキー
  * @param {http.ResponseWriter} w HTMLの出力先
  */
-func (this *View) ShowFeed(c appengine.Context, feedKey string, from string, w http.ResponseWriter) {
+func (this *View) showFeed(c appengine.Context, feedKey string, from string, w http.ResponseWriter) {
 	var dao *DAO
 	var entries []*Entry
 	var t *template.Template
@@ -85,18 +85,18 @@ func (this *View) ShowFeed(c appengine.Context, feedKey string, from string, w h
 	var feed *Feed
 	
 	dao = new(DAO)
-	feed = dao.GetFeed(c, feedKey)
-	entries = dao.GetEntries(c, feedKey)
+	feed = dao.getFeed(c, feedKey)
+	entries = dao.getEntries(c, feedKey)
 	
 	t, err = template.ParseFiles("server/html/feed.html")
-	Check(c, err)
+	check(c, err)
 	
 	contents = make(map[string]interface{})
 	contents["Title"] = feed.Title
 	contents["Entries"] = entries
 	contents["From"] = from
 	contents["LogoutURL"], err = user.LogoutURL(c, "/")
-	Check(c, err)
+	check(c, err)
 	
 	t.Execute(w, contents)
 }
@@ -105,17 +105,17 @@ func (this *View) ShowFeed(c appengine.Context, feedKey string, from string, w h
  * ログインを促す画面を表示
  * @methodOf View
  */
-func (this *View) ShowLogin(c appengine.Context, w http.ResponseWriter) {
+func (this *View) showLogin(c appengine.Context, w http.ResponseWriter) {
 	var content map[string]interface{}
 	var err error
 	var t *template.Template
 	
 	t, err = template.ParseFiles("server/html/login.html")
-	Check(c, err)
+	check(c, err)
 	
 	content = make(map[string]interface{}, 0)
 	content["LoginURL"], err = user.LoginURL(c, "/")
-	Check(c, err)
+	check(c, err)
 	
 	t.Execute(w, content)
 }

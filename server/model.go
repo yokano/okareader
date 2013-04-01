@@ -41,7 +41,7 @@ type DAO struct {
  * @param encodedParentKey {string} 追加先の親フォルダのキー
  * @returns {string} 追加したフォルダのキーをエンコードした文字列
  */
-func (this *DAO) RegisterFolder(c appengine.Context, u *user.User, title string, root bool, encodedParentKey string) string {
+func (this *DAO) registerFolder(c appengine.Context, u *user.User, title string, root bool, encodedParentKey string) string {
 	var folder *Folder
 	var key *datastore.Key
 	var err error
@@ -64,7 +64,7 @@ func (this *DAO) RegisterFolder(c appengine.Context, u *user.User, title string,
 	// 追加するフォルダをデータストアに保存
 	key = datastore.NewIncompleteKey(c, "folder", nil)
 	key, err = datastore.Put(c, key, folder)
-	Check(c, err)
+	check(c, err)
 	
 	encodedKey = key.Encode()
 	
@@ -73,16 +73,16 @@ func (this *DAO) RegisterFolder(c appengine.Context, u *user.User, title string,
 		
 		// 親のChildrenに子のキーを追加して上書きする
 		parentKey, err = datastore.DecodeKey(encodedParentKey)
-		Check(c, err)
+		check(c, err)
 		
 		parentFolder = new(Folder)
 		err = datastore.Get(c, parentKey, parentFolder)
-		Check(c, err)
+		check(c, err)
 		
 		parentFolder.Children = append(parentFolder.Children, encodedKey)
 		
 		_, err = datastore.Put(c, parentKey, parentFolder)
-		Check(c, err)
+		check(c, err)
 	}
 	
 	return encodedKey
@@ -93,15 +93,15 @@ func (this *DAO) RegisterFolder(c appengine.Context, u *user.User, title string,
  * @param {appengine.Context} c コンテキスト
  * @param {string} encodedKey 文字列
  */
-func (this *DAO) UpdateFolder(c appengine.Context, encodedKey string, folder *Folder) {
+func (this *DAO) updateFolder(c appengine.Context, encodedKey string, folder *Folder) {
 	var key *datastore.Key
 	var err error
 	
 	key, err = datastore.DecodeKey(encodedKey)
-	Check(c, err)
+	check(c, err)
 	
 	_, err = datastore.Put(c, key, folder)
-	Check(c, err)
+	check(c, err)
 }
 
 /**
@@ -110,15 +110,15 @@ func (this *DAO) UpdateFolder(c appengine.Context, encodedKey string, folder *Fo
  * rootフォルダは削除不可
  * @param encodedKey {string} 削除するフォルダのキーをエンコードした文字列
  */
-func (this *DAO) RemoveFolder(c appengine.Context, encodedKey string) {
+func (this *DAO) removeFolder(c appengine.Context, encodedKey string) {
 	var err error
 	var key *datastore.Key
 	
 	key, err = datastore.DecodeKey(encodedKey)
-	Check(c, err)
+	check(c, err)
 	
 	err = datastore.Delete(c, key)
-	Check(c, err)
+	check(c, err)
 }
 
 /**
@@ -126,17 +126,17 @@ func (this *DAO) RemoveFolder(c appengine.Context, encodedKey string) {
  * @param {appengine.Context} c コンテキスト
  * @param {string} encodedKey 取得したいフォルダのキーをエンコードした文字列
  */
-func (this *DAO) GetFolder(c appengine.Context, encodedKey string) *Folder {
+func (this *DAO) getFolder(c appengine.Context, encodedKey string) *Folder {
 	var key *datastore.Key
 	var err error
 	var folder *Folder
 	
 	key, err = datastore.DecodeKey(encodedKey)
-	Check(c, err)
+	check(c, err)
 	
 	folder = new(Folder)
 	err = datastore.Get(c, key, folder)
-	Check(c, err)
+	check(c, err)
 	
 	return folder
 }
@@ -150,7 +150,7 @@ func (this *DAO) GetFolder(c appengine.Context, encodedKey string) *Folder {
  * @returns {string} 取得したアイテムがフォルダなら"folder",フィードなら"feed"
  * @returns {*Folder or *Feed} 取得したフォルダまたはフィードオブジェクト
  */
-func (this *DAO) GetItem(c appengine.Context, encodedKey string) (string, interface{}) {
+func (this *DAO) getItem(c appengine.Context, encodedKey string) (string, interface{}) {
 	var key *datastore.Key
 	var err error
 	type Item struct {
@@ -165,11 +165,11 @@ func (this *DAO) GetItem(c appengine.Context, encodedKey string) (string, interf
 	var itemType string
 	
 	key, err = datastore.DecodeKey(encodedKey)
-	Check(c, err)
+	check(c, err)
 	
 	item = new(Item)
 	err = datastore.Get(c, key, item)
-	Check(c, err)
+	check(c, err)
 	
 	if item.Type == "" {
 		// 要素はFeed
@@ -189,7 +189,7 @@ func (this *DAO) GetItem(c appengine.Context, encodedKey string) (string, interf
 /**
  * ルートフォルダを取得
  */
-func (this *DAO) GetRootFolder(c appengine.Context, u *user.User) (string, *Folder) {
+func (this *DAO) getRootFolder(c appengine.Context, u *user.User) (string, *Folder) {
 	var root *Folder
 	var query *datastore.Query
 	var iterator *datastore.Iterator
@@ -201,7 +201,7 @@ func (this *DAO) GetRootFolder(c appengine.Context, u *user.User) (string, *Fold
 	query = datastore.NewQuery("folder").Filter("Type =", "root").Filter("Owner =", u.ID)
 	iterator = query.Run(c)
 	key, err = iterator.Next(root)
-	Check(c, err)
+	check(c, err)
 	
 	if key != nil {
 		encodedKey = key.Encode()
@@ -215,7 +215,7 @@ func (this *DAO) GetRootFolder(c appengine.Context, u *user.User) (string, *Fold
  * @param {*Folder} folder 親フォルダ
  * @returns {[]interface{}} フォルダの中身を配列化したもの
  */
-func (this *DAO) GetChildren(c appengine.Context, folder *Folder) []interface{} {
+func (this *DAO) getChildren(c appengine.Context, folder *Folder) []interface{} {
 	var err error
 	var children []interface{}
 	var keys []*datastore.Key
@@ -225,12 +225,12 @@ func (this *DAO) GetChildren(c appengine.Context, folder *Folder) []interface{} 
 	keys = make([]*datastore.Key, 0)
 	for _, encodedKey = range folder.Children {
 		key, err = datastore.DecodeKey(encodedKey)
-		Check(c, err)
+		check(c, err)
 		keys = append(keys, key)
 	}
 	
 	err = datastore.GetMulti(c, keys, children)
-	Check(c, err)
+	check(c, err)
 	return children
 }
 
@@ -244,7 +244,7 @@ func (this *DAO) GetChildren(c appengine.Context, folder *Folder) []interface{} 
  * @returns {string} 追加したフィードのキーをエンコードしたもの　重複していたら空文字列
  * @returnss {bool} 重複していた場合はtrue
  */
-func (this *DAO) RegisterFeed(c appengine.Context, feed *Feed, to string) (string, bool) {
+func (this *DAO) registerFeed(c appengine.Context, feed *Feed, to string) (string, bool) {
 	var key *datastore.Key
 	var encodedKey string
 	var err error
@@ -256,25 +256,25 @@ func (this *DAO) RegisterFeed(c appengine.Context, feed *Feed, to string) (strin
 	encodedKey = key.Encode()
 	
 	// 重複していたら登録しない
-	duplicated = this.Exist(c, encodedKey)
+	duplicated = this.exist(c, encodedKey)
 	if duplicated {
 		encodedKey = ""
 	} else {
 		// フィード保存
 		_, err = datastore.Put(c, key, feed)
-		Check(c, err)
+		check(c, err)
 		
 		// 親フォルダ取得
 		parentFolderKey, err = datastore.DecodeKey(to)
-		Check(c, err)
+		check(c, err)
 		parentFolder = new(Folder)
 		err = datastore.Get(c, parentFolderKey, parentFolder)
-		Check(c, err)
+		check(c, err)
 		
 		// 親フォルダの子に追加
 		parentFolder.Children = append(parentFolder.Children, encodedKey)
 		_, err = datastore.Put(c, parentFolderKey, parentFolder)
-		Check(c, err)
+		check(c, err)
 	}
 	
 	return encodedKey, duplicated
@@ -288,7 +288,7 @@ func (this *DAO) RegisterFeed(c appengine.Context, feed *Feed, to string) (strin
  * @param {string} to 追加先のフィードのキー
  * @returns {[]string} 追加したエントリのキー配列
  */
-func (this *DAO) RegisterEntries(c appengine.Context, entries []*Entry, to string) []string {
+func (this *DAO) registerEntries(c appengine.Context, entries []*Entry, to string) []string {
 	var entry *Entry
 	var key *datastore.Key
 	var result []string
@@ -298,13 +298,13 @@ func (this *DAO) RegisterEntries(c appengine.Context, entries []*Entry, to strin
 	var feedKey *datastore.Key
 	
 	feedKey, err = datastore.DecodeKey(to)
-	feed = this.GetFeed(c, to)
+	feed = this.getFeed(c, to)
 	
 	result = make([]string, len(entries))
 	for i, entry = range entries {
 		key = datastore.NewKey(c, "entry", entry.Id, 0, nil)
 		_, err = datastore.Put(c, key, entry)
-		Check(c, err)
+		check(c, err)
 		result[i] = key.Encode()
 		feed.Entries = append(feed.Entries, result[i])
 	}
@@ -321,7 +321,7 @@ func (this *DAO) RegisterEntries(c appengine.Context, entries []*Entry, to strin
  * @param {string} feedKey エンコード済みのフィードキー
  * @returns {[]*Entry} エントリ配列
  */
-func (this *DAO) GetEntries(c appengine.Context, feedKey string) []*Entry {
+func (this *DAO) getEntries(c appengine.Context, feedKey string) []*Entry {
 	var feed *Feed
 	var entryKey string
 	var entry *Entry
@@ -331,14 +331,14 @@ func (this *DAO) GetEntries(c appengine.Context, feedKey string) []*Entry {
 	
 	entries = make([]*Entry, 0)
 	
-	feed = this.GetFeed(c, feedKey)
+	feed = this.getFeed(c, feedKey)
 	for _, entryKey = range feed.Entries {
 		key, err = datastore.DecodeKey(entryKey)
-		Check(c, err)
+		check(c, err)
 		
 		entry = new(Entry)
 		err = datastore.Get(c, key, entry)
-		Check(c, err)
+		check(c, err)
 		
 		entries = append(entries, entry)
 	}
@@ -352,17 +352,17 @@ func (this *DAO) GetEntries(c appengine.Context, feedKey string) []*Entry {
  * @param {string} feedKey エンコード済みのフィードキー
  * @retruns {*Feed} フィード
  */
-func (this *DAO) GetFeed(c appengine.Context, feedKey string) *Feed {
+func (this *DAO) getFeed(c appengine.Context, feedKey string) *Feed {
 	var feed *Feed
 	var err error
 	var key *datastore.Key
 
 	feed = new(Feed)
 	key, err = datastore.DecodeKey(feedKey)
-	Check(c, err)
+	check(c, err)
 	
 	err = datastore.Get(c, key, feed)
-	Check(c, err)
+	check(c, err)
 		
 	return feed
 }
@@ -375,18 +375,18 @@ func (this *DAO) GetFeed(c appengine.Context, feedKey string) *Feed {
  * @param {string} encodedKey エンコード済みのキー
  * @returns {bool} 重複していたらtrue
  */
-func (this *DAO) Exist(c appengine.Context, encodedKey string) bool {
+func (this *DAO) exist(c appengine.Context, encodedKey string) bool {
 	var result bool
 	var key *datastore.Key
 	var item interface{}
 	var err error
 	
 	key, err = datastore.DecodeKey(encodedKey)
-	Check(c, err)
+	check(c, err)
 	
 	item = new(interface{})
 	err = datastore.Get(c, key, item)
-	Check(c, err)
+	check(c, err)
 	if err == datastore.ErrNoSuchEntity {
 		result = false
 	} else {
@@ -415,7 +415,7 @@ func (this *DAO) clear(c appengine.Context) {
 	for _, kind = range kinds {
 		query = datastore.NewQuery(kind).KeysOnly()
 		keys, err = query.GetAll(c, nil)
-		Check(c, err)
+		check(c, err)
 		datastore.DeleteMulti(c, keys)
 	}
 }

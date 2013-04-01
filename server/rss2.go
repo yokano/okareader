@@ -43,7 +43,7 @@ func (this *RSS2) encode(c appengine.Context, xmldata []byte) (*Feed, []*Entry) 
 	
 	channel = new(Channel)
 	err = xml.Unmarshal(xmldata, channel)
-	Check(c, err)
+	check(c, err)
 	
 	feed = new(Feed)
 	feed.Id = channel.Link
