@@ -18,44 +18,48 @@ import(
 type Controller struct {
 }
 
-/**
- * リクエストURLによる処理の振り分け
+/*
+ * リクエストによる処理の振り分け
+ * http://okareader.appspot.com/ 以下のURLに対して処理を割り当てる
  * /api/*** はAjaxによるAPIへのアクセスであり画面の描画は不用
  * それ以外はページ遷移を表し画面を描画する
  * @function
  */
-func init() {
-	var controller *Controller
-	controller = new(Controller)
+func (this *Controller) handle() {
 	
 	// ルートフォルダの表示
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		controller.home(w, r)
+		this.home(w, r)
 	})
 	
 	// フォルダ画面
 	http.HandleFunc("/folder", func(w http.ResponseWriter, r *http.Request) {
-		controller.folder(w, r)
+		this.folder(w, r)
 	})
 	
 	// フィード画面
 	http.HandleFunc("/feed", func(w http.ResponseWriter, r *http.Request) {
-		controller.feed(w, r)
+		this.feed(w, r)
 	})
 	
 	// フォルダの追加API
 	http.HandleFunc("/api/addfolder", func(w http.ResponseWriter, r *http.Request) {
-		controller.addFolder(w, r)
+		this.addFolder(w, r)
 	})
 	
 	// フィードの追加API
 	http.HandleFunc("/api/addfeed", func(w http.ResponseWriter, r *http.Request) {
-		controller.addFeed(w, r)
+		this.addFeed(w, r)
 	})
 	
-	// データ削除
+	// エントリの既読化
+	http.HandleFunc("/api/read", func(w http.ResponseWriter, r *http.Request) {
+		this.readEntry(w, r)
+	})
+	
+	// 全データ削除（デバッグ用）
 	http.HandleFunc("/clear", func(w http.ResponseWriter, r *http.Request) {
-		controller.clear(w, r)
+		this.clear(w, r)
 	})
 }
 
@@ -207,7 +211,6 @@ func (this *Controller) addFeed(w http.ResponseWriter, r *http.Request) {
 			rss1 = new(RSS1)
 			feed, entries = rss1.encode(c, xml)
 		case "etc":
-			
 	}
 	
 	// フィード追加を試みる
@@ -218,6 +221,24 @@ func (this *Controller) addFeed(w http.ResponseWriter, r *http.Request) {
 		dao.registerEntries(c, entries, feedKey)
 		fmt.Fprintf(w, `{"duplicated":false, "key":"%s", "name":"%s"}`, feedKey, feed.Title)
 	}
+}
+
+/**
+ * API:エントリを既読化（削除）する
+ * @methodOf Controller
+ */
+func (this *Controller) readEntry(w http.ResponseWriter, r *http.Request) {
+	var c appengine.Context
+	var entryId string
+	var feedKey string
+	var dao *DAO
+	
+	c = appengine.NewContext(r)
+	entryId = r.FormValue("id")
+	feedKey = r.FormValue("feed_key")
+	dao = new(DAO)
+	
+	dao.removeEntry(c, entryId, feedKey)
 }
 
 /**

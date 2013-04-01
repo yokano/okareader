@@ -347,6 +347,42 @@ func (this *DAO) getEntries(c appengine.Context, feedKey string) []*Entry {
 }
 
 /**
+ * 指定されたエントリを削除する
+ * @methodOf DAO
+ * @param {appengine.Context} c コンテキスト
+ * @param {string} id 削除するエントリのID
+ * @param {string} feedKey エントリが登録されているフィードのキー
+ */
+func (this *DAO) removeEntry(c appengine.Context, id string, feedKey string) {
+	var query *datastore.Query
+	var iterator *datastore.Iterator
+	var key *datastore.Key
+	var err error
+	var feed *Feed
+	var encodedEntryKey string
+	
+	query = datastore.NewQuery("entry").Filter("Id =", id)
+	iterator = query.Run(c)
+	key, err = iterator.Next(nil)
+	check(c, err)
+	
+	err = datastore.Delete(c, key)
+	check(c, err)
+	
+	encodedEntryKey = key.Encode()
+	
+	key, err = datastore.DecodeKey(feedKey)
+	check(c, err)
+	
+	feed = new(Feed)
+	err = datastore.Get(c, key, feed)
+	check(c, err)
+	
+	feed.Entries = removeItem(feed.Entries, encodedEntryKey)
+	datastore.Put(c, key, feed)
+}
+
+/**
  * フィードをデータストアから読み出す
  * @param {appengine.Context} c コンテキスト
  * @param {string} feedKey エンコード済みのフィードキー
@@ -363,7 +399,7 @@ func (this *DAO) getFeed(c appengine.Context, feedKey string) *Feed {
 	
 	err = datastore.Get(c, key, feed)
 	check(c, err)
-		
+	
 	return feed
 }
 

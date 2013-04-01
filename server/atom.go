@@ -22,6 +22,9 @@ type EntryTemplate struct {
 type AtomTemplate struct {
 	Id string `xml:"id"`
 	Title string `xml:"title"`
+	Link struct {
+		Href string `xml:"href,attr"`
+	} `xml:"link"`
 	Entries []*EntryTemplate `xml:"entry"`
 	Owner string
 }
@@ -87,7 +90,7 @@ func (this *AtomTemplate) encode() (*Feed, []*Entry){
 	}
 	
 	// Atomの変換
-	feed.Id = this.Id
+	feed.Id = this.Link.Href
 	feed.Title = this.Title
 	
 	return feed, entries

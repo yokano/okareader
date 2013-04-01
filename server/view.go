@@ -16,7 +16,6 @@ import (
  * ページの表示関係を行うオブジェクト
  */
 type View struct {
-
 }
 
 /**
@@ -95,6 +94,7 @@ func (this *View) showFeed(c appengine.Context, feedKey string, from string, w h
 	contents["Title"] = feed.Title
 	contents["Entries"] = entries
 	contents["From"] = from
+	contents["FeedKey"] = feedKey
 	contents["LogoutURL"], err = user.LogoutURL(c, "/")
 	check(c, err)
 	
@@ -106,16 +106,16 @@ func (this *View) showFeed(c appengine.Context, feedKey string, from string, w h
  * @methodOf View
  */
 func (this *View) showLogin(c appengine.Context, w http.ResponseWriter) {
-	var content map[string]interface{}
+	var contents map[string]interface{}
 	var err error
 	var t *template.Template
 	
 	t, err = template.ParseFiles("server/html/login.html")
 	check(c, err)
 	
-	content = make(map[string]interface{}, 0)
-	content["LoginURL"], err = user.LoginURL(c, "/")
+	contents = make(map[string]interface{}, 0)
+	contents["LoginURL"], err = user.LoginURL(c, "/")
 	check(c, err)
 	
-	t.Execute(w, content)
+	t.Execute(w, contents)
 }

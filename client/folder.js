@@ -38,7 +38,6 @@ $('.folder_page').live('pageinit', function() {
 	
 	// フィードを追加するボタン
 	addFeedButton.bind('tap', function() {
-		console.log('add feed');
 		var url = feedURL.val();
 		
 		$.ajax('/api/addfeed', {
