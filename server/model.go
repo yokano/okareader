@@ -21,12 +21,14 @@ type Entry struct {
 	Link string
 	Title string
 	Updated string
+	Owner string
 }
 
 type Feed struct {
 	Id string
 	Title string
 	Entries []string
+	Owner string
 }
 
 type DAO struct {
@@ -251,18 +253,23 @@ func (this *DAO) registerFeed(c appengine.Context, feed *Feed, to string) (strin
 	var parentFolderKey *datastore.Key
 	var parentFolder *Folder
 	var duplicated bool
+	var u *user.User
 	
-	key = datastore.NewKey(c, "feed", feed.Id, 0, nil)
-	encodedKey = key.Encode()
+	key = datastore.NewIncompleteKey(c, "feed", nil)
 	
 	// 重複していたら登録しない
-	duplicated = this.exist(c, encodedKey)
+	duplicated = this.exist(c, feed)
 	if duplicated {
 		encodedKey = ""
 	} else {
+		// ユーザID追加
+		u = user.Current(c)
+		feed.Owner = u.ID
+		
 		// フィード保存
-		_, err = datastore.Put(c, key, feed)
+		key, err = datastore.Put(c, key, feed)
 		check(c, err)
+		encodedKey = key.Encode()
 		
 		// 親フォルダ取得
 		parentFolderKey, err = datastore.DecodeKey(to)
@@ -296,14 +303,18 @@ func (this *DAO) registerEntries(c appengine.Context, entries []*Entry, to strin
 	var i int
 	var feed *Feed
 	var feedKey *datastore.Key
+	var u *user.User
 	
 	feedKey, err = datastore.DecodeKey(to)
 	feed = this.getFeed(c, to)
 	
+	u = user.Current(c)
+	
 	result = make([]string, len(entries))
 	for i, entry = range entries {
-		key = datastore.NewKey(c, "entry", entry.Id, 0, nil)
-		_, err = datastore.Put(c, key, entry)
+		entry.Owner = u.ID
+		key = datastore.NewIncompleteKey(c, "entry", nil)
+		key, err = datastore.Put(c, key, entry)
 		check(c, err)
 		result[i] = key.Encode()
 		feed.Entries = append(feed.Entries, result[i])
@@ -408,22 +419,22 @@ func (this *DAO) getFeed(c appengine.Context, feedKey string) *Feed {
  * フィードやエントリなど重複させたくないデータはこの関数を使ってチェックする
  * @methodOf DAO
  * @param {appengine.Context} c コンテキスト
- * @param {string} encodedKey エンコード済みのキー
+ * @param {*Feed} feed フィード
  * @returns {bool} 重複していたらtrue
  */
-func (this *DAO) exist(c appengine.Context, encodedKey string) bool {
+func (this *DAO) exist(c appengine.Context, feed *Feed) bool {
 	var result bool
-	var key *datastore.Key
-	var item interface{}
 	var err error
+	var query *datastore.Query
+	var u *user.User
+	var count int
 	
-	key, err = datastore.DecodeKey(encodedKey)
+	u = user.Current(c)
+	query = datastore.NewQuery("feed").Filter("Id =", feed.Id).Filter("Owner =", u.ID)
+	count, err = query.Count(c)
 	check(c, err)
 	
-	item = new(interface{})
-	err = datastore.Get(c, key, item)
-	check(c, err)
-	if err == datastore.ErrNoSuchEntity {
+	if count == 0 {
 		result = false
 	} else {
 		result = true
