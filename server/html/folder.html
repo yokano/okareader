@@ -19,14 +19,18 @@
 			<div data-role="content">
 				<ul id="contents" data-role="listview" data-count-theme="c">
 					{{$from := .FolderKey}}
-					{{range .Children}}<li><a href="/{{.ItemType}}?key={{.Key}}&from={{$from}}" data-transition="slide">{{.Item.Title}}</a></li>{{end}}
+					{{range .Children}}
+					<li>
+						<a href="/{{.ItemType}}?key={{.Key}}&from={{$from}}" data-transition="slide">{{.Item.Title}}</a>
+					</li>
+					{{end}}
 				</ul>
 			</div>
 			<div data-role="footer" data-position="fixed">
 				<div data-role="navbar">
 					<ul>
 						<li><a href="#add_form" data-icon="add" id="add" data-rel="popup" data-position-to="window" data-transition="pop">追加</a></li>
-						<li><a href="#" data-icon="edit">編集</a></li>
+						<li><a href="#" id="edit" data-icon="edit">編集</a></li>
 						<li><a href="#" data-icon="check">既読化</a></li>
 					</ul>
 				</div>
