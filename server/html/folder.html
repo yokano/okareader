@@ -24,7 +24,7 @@
 					{{$from := .FolderKey}}
 					{{range .Children}}
 					<li>
-						<a href="/{{.ItemType}}?key={{.Key}}&from={{$from}}" data-transition="slide">{{.Item.Title}} {{if .Item.Count}}<span class="ui-li-count">{{.Item.Count}}</span>{{end}}</a>
+						<a href="/{{.ItemType}}?key={{.Key}}" data-transition="slide">{{.Item.Title}} {{if .Item.Count}}<span class="ui-li-count">{{.Item.Count}}</span>{{end}}</a>
 					</li>
 					{{end}}
 				</ul>
