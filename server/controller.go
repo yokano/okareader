@@ -52,9 +52,14 @@ func (this *Controller) handle() {
 		this.addFeed(w, r)
 	})
 	
-	// エントリの既読化
+	// １件のエントリの既読化
 	http.HandleFunc("/api/read", func(w http.ResponseWriter, r *http.Request) {
 		this.readEntry(w, r)
+	})
+
+	// フィード内のエントリをすべて既読化
+	http.HandleFunc("/api/readall", func(w http.ResponseWriter, r *http.Request) {
+		this.readAll(w, r)
 	})
 	
 	// 全データ削除（デバッグ用）
@@ -239,6 +244,28 @@ func (this *Controller) readEntry(w http.ResponseWriter, r *http.Request) {
 	dao = new(DAO)
 	
 	dao.removeEntry(c, entryId, feedKey)
+}
+
+/**
+ * API:フィード内のエントリをすべて既読する
+ * @methodOf Controller
+ */
+func (this *Controller) readAll(w http.ResponseWriter, r *http.Request) {
+	var encodedFeedKey string
+	var c appengine.Context
+	var entries []*Entry
+	var dao *DAO
+	var entry *Entry
+	
+	c = appengine.NewContext(r)
+	dao = new(DAO)
+	
+	encodedFeedKey = r.FormValue("key")
+	
+	entries = dao.getEntries(c, encodedFeedKey)
+	for _, entry = range entries {
+		dao.removeEntry(c, entry.Id, encodedFeedKey)
+	}
 }
 
 /**
