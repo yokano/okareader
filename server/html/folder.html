@@ -13,8 +13,8 @@
 	<body>
 		<div data-role="page" class="folder_page">
 			<div data-role="header" data-position="fixed">
-				{{if .From}}
-				<a href="/folder?key={{.From}}" data-icon="back" data-transition="slide" data-direction="reverse">戻る</a>
+				{{if .Parent}}
+				<a href="/folder?key={{.Parent}}" data-icon="back" data-transition="slide" data-direction="reverse">戻る</a>
 				{{end}}
 				<h1>{{.Title}}</h1>
 				<a href="{{.LogoutURL}}" data-icon="delete" class="ui-btn-right">ログアウト</a>

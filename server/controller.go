@@ -96,7 +96,7 @@ func (this *Controller) home(w http.ResponseWriter, r *http.Request) {
 		if root.Type == "" {
 			key = dao.registerFolder(c, u, "root", true, "")
 		}
-		view.showFolder(c, key, "", w)
+		view.showFolder(c, key, w)
 	}
 }
 
@@ -113,14 +113,12 @@ func (this *Controller) folder(w http.ResponseWriter, r *http.Request) {
 	var c appengine.Context
 	var view *View
 	var encodedKey string
-	var from string
 	
 	c = appengine.NewContext(r)
 	encodedKey = r.FormValue("key")
-	from = r.FormValue("from")
 
 	view = new(View)
-	view.showFolder(c, encodedKey, from, w)
+	view.showFolder(c, encodedKey, w)
 }
 
 /**
@@ -136,14 +134,12 @@ func (this *Controller) feed(w http.ResponseWriter, r *http.Request) {
 	var c appengine.Context
 	var view *View
 	var feedKey string
-	var from string
 	
 	c = appengine.NewContext(r)
 	feedKey = r.FormValue("key")
-	from = r.FormValue("from")
 	
 	view = new(View)
-	view.showFeed(c, feedKey, from, w)
+	view.showFeed(c, feedKey, w)
 }
 
 /**

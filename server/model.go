@@ -12,8 +12,9 @@ import (
 type Folder struct {
 	Type string  // root or other
 	Title string
-	Children []string  // encoded string array
+	Children []string
 	Owner string
+	Parent string
 }
 
 type Entry struct {
@@ -29,6 +30,7 @@ type Feed struct {
 	Title string
 	Entries []string
 	Owner string
+	Parent string
 }
 
 type DAO struct {
@@ -54,6 +56,7 @@ func (this *DAO) registerFolder(c appengine.Context, u *user.User, title string,
 	// 追加するフォルダの作成
 	folder = new(Folder)
 	folder.Owner = u.ID
+	folder.Parent = encodedParentKey
 	folder.Children = make([]string, 0)
 	if root {
 		folder.Type = "root"
@@ -302,6 +305,7 @@ func (this *DAO) registerFeed(c appengine.Context, feed *Feed, to string) (strin
 		feed.Owner = u.ID
 		
 		// フィード保存
+		feed.Parent = to
 		key, err = datastore.Put(c, key, feed)
 		check(c, err)
 		encodedKey = key.Encode()

@@ -23,10 +23,9 @@ type View struct {
  * @methodOf View
  * @param {appengine.Context} c コンテキスト
  * @param {string} key エンコード済みのフォルダのキー
- * @param {string} from 遷移前のフォルダのキー
  * @param {http.ResponseWriter} w HTMLの出力先
  */
-func (this *View) showFolder(c appengine.Context, key string, from string, w http.ResponseWriter) {
+func (this *View) showFolder(c appengine.Context, key string, w http.ResponseWriter) {
 	type ListItem struct {
 		Key string
 		Item interface{}
@@ -48,11 +47,11 @@ func (this *View) showFolder(c appengine.Context, key string, from string, w htt
 	check(c, err)
 
 	contents["FolderKey"] = key
-	contents["From"] = from
 	
 	folder = new(Folder)
 	folder = dao.getFolder(c, key)
 	contents["Title"] = folder.Title
+	contents["Parent"] = folder.Parent
 	
 	children = make([]*ListItem, len(folder.Children))
 	for i, key = range folder.Children {
@@ -73,10 +72,9 @@ func (this *View) showFolder(c appengine.Context, key string, from string, w htt
  * @methodOf View
  * @param {appengine.Context} c コンテキスト
  * @param {string} feedKey 表示するフィードのキー
- * @param {string} from 遷移前のフォルダのキー
  * @param {http.ResponseWriter} w HTMLの出力先
  */
-func (this *View) showFeed(c appengine.Context, feedKey string, from string, w http.ResponseWriter) {
+func (this *View) showFeed(c appengine.Context, feedKey string, w http.ResponseWriter) {
 	var dao *DAO
 	var entries []*Entry
 	var t *template.Template
@@ -94,7 +92,7 @@ func (this *View) showFeed(c appengine.Context, feedKey string, from string, w h
 	contents = make(map[string]interface{})
 	contents["Title"] = feed.Title
 	contents["Entries"] = entries
-	contents["From"] = from
+	contents["Parent"] = feed.Parent
 	contents["FeedKey"] = feedKey
 	contents["LogoutURL"], err = user.LogoutURL(c, "/")
 	check(c, err)
