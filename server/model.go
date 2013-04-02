@@ -159,11 +159,12 @@ func (this *DAO) getItem(c appengine.Context, encodedKey string) (string, interf
 		Title string
 		Owner string
 		Entries []string
+		Children []string
 		Type string
-		Id string 
+		Id string
+		Count int
 	}
 	var item *Item
-	var result interface{}
 	var itemType string
 	
 	key, err = datastore.DecodeKey(encodedKey)
@@ -175,17 +176,15 @@ func (this *DAO) getItem(c appengine.Context, encodedKey string) (string, interf
 	
 	if item.Type == "" {
 		// 要素はFeed
-		result = new(Feed)
-		result = item
+		item.Count = len(item.Entries)
 		itemType = "feed"
 	} else {
 		// 要素はフォルダ
-		result = new(Folder)
-		result = item
+		item.Count = len(item.Children)
 		itemType = "folder"
 	}
 	
-	return itemType, result
+	return itemType, item
 }
 
 /**

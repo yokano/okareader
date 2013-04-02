@@ -31,6 +31,7 @@ func (this *View) showFolder(c appengine.Context, key string, from string, w htt
 		Key string
 		Item interface{}
 		ItemType string
+		Count int
 	}
 	var contents map[string]interface{}
 	var err error
