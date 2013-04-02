@@ -180,11 +180,47 @@ func (this *DAO) getItem(c appengine.Context, encodedKey string) (string, interf
 		itemType = "feed"
 	} else {
 		// 要素はフォルダ
-		item.Count = len(item.Children)
 		itemType = "folder"
+		item.Count = this.getEntriesCount(c, encodedKey)
 	}
 	
 	return itemType, item
+}
+
+/**
+ * 指定されたフォルダ以下にあるエントリの総数を返す
+ * @methodOf DAO
+ * @param {appengine.Context} c コンテキスト
+ * @param {string} folderKey エンコード済みのフォルダキー
+ * @returns {int} エントリの総数
+ */
+func (this *DAO) getEntriesCount(c appengine.Context, folderKey string) int {
+	var key *datastore.Key
+	var err error
+	var folder *Folder
+	var sum int
+	var itemType string
+	var childKey string
+
+	key, err = datastore.DecodeKey(folderKey)
+	check(c, err)
+	
+	folder = new(Folder)
+	err = datastore.Get(c, key, folder)
+	check(c, err)
+
+	sum = 0
+	for _, childKey = range folder.Children {
+		itemType, _ = this.getItem(c, childKey)
+		
+		if itemType == "folder" {
+			sum = sum + this.getEntriesCount(c, childKey)
+		} else if itemType == "feed" {
+			sum = sum + len(this.getEntries(c, childKey))
+		}
+	}
+	
+	return sum
 }
 
 /**
