@@ -7,7 +7,7 @@ $('.folder_page').live('pageinit', function() {
 	var contents = $(this).find('#contents');
 	var addFolderButton = $(this).find('#add_folder_button');
 	var folderName = $(this).find('#folder_name');
-	var folderKey = $(this).find('#folder_key');
+	var folderKey = $(this).attr('folder_key');
 	var addFolder = $(this).find('#add_folder');
 	var addFeedButton = $(this).find('#add_feed_button');
 	var feedURL = $(this).find('#feed_url');
@@ -23,7 +23,7 @@ $('.folder_page').live('pageinit', function() {
 		$.ajax('/api/addfolder', {
 			data: {
 				folder_name: name,
-				folder_key: folderKey.val()
+				folder_key: folderKey
 			},
 			dataType: 'json',
 			success: function(data) {
@@ -44,7 +44,7 @@ $('.folder_page').live('pageinit', function() {
 		$.ajax('/api/addfeed', {
 			data: {
 				url: url,
-				folder_key: folderKey.val()
+				folder_key: folderKey
 			},
 			dataType: 'json',
 			success: function(data) {
@@ -194,5 +194,22 @@ $('.folder_page').live('pageinit', function() {
 				console.log('error');
 			}
 		});
+	});
+	
+	// フォルダの既読化ボタン
+	$('#read').bind('tap', function() {
+		if(confirm('フォルダの中身をすべて既読化しますか？')) {
+			$.ajax('/api/readfolder', {
+				data: {
+					key: folderKey
+				},
+				success: function() {
+					$('.ui-li-count').remove();
+				},
+				error: function() {
+					console.log('error');
+				}
+			});
+		}
 	});
 });

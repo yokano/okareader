@@ -454,6 +454,54 @@ func (this *DAO) removeFeed(c appengine.Context, encodedKey string) {
 }
 
 /**
+ * フォルダの既読化
+ * @methodOf DAO
+ * @param {appengine.Context} c コンテキスト
+ * @param {string} encodedKey
+ */
+func (this *DAO) readFolder(c appengine.Context, encodedKey string) {
+	var key *datastore.Key
+	var err error
+	var folder *Folder
+	var childKey string
+	var childType string
+	
+	// フォルダを取得する
+	key, err = datastore.DecodeKey(encodedKey)
+	check(c, err)
+	
+	folder = new(Folder)
+	err = datastore.Get(c, key, folder)
+	check(c, err)
+	
+	// フォルダ以下にあるすべてのフィードを既読化
+	for _, childKey = range folder.Children {
+		childType, _ = this.getItem(c, childKey)
+		if childType == "feed" {
+			this.readFeed(c, childKey)
+		} else if childType == "folder" {
+			this.readFolder(c, childKey)
+		}
+	}
+}
+
+/**
+ * フィードの既読化
+ * @methodOf DAO
+ * @param {appengine.Context} c コンテキスト
+ * @param {string} フィードのキー
+ */
+func (this *DAO) readFeed(c appengine.Context, encodedKey string) {
+	var entries []*Entry
+	var entry *Entry
+	
+	entries = this.getEntries(c, encodedKey)
+	for _, entry = range entries {
+		this.removeEntry(c, entry.Id, encodedKey)
+	}
+}
+
+/**
  * エントリをフィードに追加する
  * @methodOf DAO
  * @param {appengine.Context} c コンテキスト

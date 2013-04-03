@@ -57,6 +57,11 @@ func (this *Controller) handle() {
 		this.removeFolder(w, r)
 	})
 	
+	// フォルダの既読化
+	http.HandleFunc("/api/readfolder", func(w http.ResponseWriter, r *http.Request) {
+		this.readFolder(w, r)
+	})
+	
 	// フィードの追加
 	http.HandleFunc("/api/addfeed", func(w http.ResponseWriter, r *http.Request) {
 		this.addFeed(w, r)
@@ -163,7 +168,7 @@ func (this *Controller) feed(w http.ResponseWriter, r *http.Request) {
 }
 
 /**
- * API:フォルダの新規追加
+ * フォルダの新規追加
  * @methodOf Controller
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r HTTPリクエスト
@@ -189,7 +194,7 @@ func (this *Controller) addFolder(w http.ResponseWriter, r *http.Request) {
 }
 
 /**
- * API:フォルダ名の変更
+ * フォルダ名の変更
  * @methodOf Controller
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
@@ -208,6 +213,25 @@ func (this *Controller) renameFolder(w http.ResponseWriter, r *http.Request) {
 	c = appengine.NewContext(r)
 	dao = new(DAO)
 	dao.renameFolder(c, key, name)
+}
+
+/**
+ * フォルダの既読化
+ * @methodOf Controller
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ * @param {HTTP GET} key フォルダのキー
+ */
+func (this *Controller) readFolder(w http.ResponseWriter, r *http.Request) {
+	var c appengine.Context
+	var dao *DAO
+	var key string
+	
+	key = r.FormValue("key")
+	
+	c = appengine.NewContext(r)
+	dao = new(DAO)
+	dao.readFolder(c, key)
 }
 
 /**
@@ -230,7 +254,7 @@ func (this *Controller) removeFolder(w http.ResponseWriter, r *http.Request) {
 }
 
 /**
- * API:フィードの登録
+ * フィードの登録
  * @methodOf Controller
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
@@ -305,7 +329,7 @@ func (this *Controller) removeFeed(w http.ResponseWriter, r *http.Request) {
 }
 
 /**
- * API:エントリを既読化（削除）する
+ * エントリを既読化（削除）する
  * @methodOf Controller
  */
 func (this *Controller) readEntry(w http.ResponseWriter, r *http.Request) {
@@ -323,29 +347,22 @@ func (this *Controller) readEntry(w http.ResponseWriter, r *http.Request) {
 }
 
 /**
- * API:フィード内のエントリをすべて既読する
+ * フィード内のエントリをすべて既読する
  * @methodOf Controller
  */
 func (this *Controller) readAll(w http.ResponseWriter, r *http.Request) {
 	var encodedFeedKey string
 	var c appengine.Context
-	var entries []*Entry
 	var dao *DAO
-	var entry *Entry
-	
-	c = appengine.NewContext(r)
-	dao = new(DAO)
 	
 	encodedFeedKey = r.FormValue("key")
-	
-	entries = dao.getEntries(c, encodedFeedKey)
-	for _, entry = range entries {
-		dao.removeEntry(c, entry.Id, encodedFeedKey)
-	}
+	c = appengine.NewContext(r)
+	dao = new(DAO)
+	dao.readFeed(c, encodedFeedKey)
 }
 
 /**
- * API: フィードの名前を変更する
+ * フィードの名前を変更する
  * @methodOf Controller
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト

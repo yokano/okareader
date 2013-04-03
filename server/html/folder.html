@@ -11,7 +11,7 @@
 	</head>
 
 	<body>
-		<div data-role="page" class="folder_page">
+		<div data-role="page" class="folder_page" folder_key="{{.FolderKey}}">
 			
 			<div data-role="header" data-position="fixed">
 				{{if .Parent}}
@@ -35,9 +35,9 @@
 			<div data-role="footer" data-position="fixed">
 				<div data-role="navbar">
 					<ul>
-						<li><a href="#add_form" data-icon="add" id="add" data-rel="popup" data-position-to="window" data-transition="pop">追加</a></li>
-						<li><a href="#" id="edit" data-icon="edit">編集</a></li>
-						<li><a href="#" data-icon="check">既読化</a></li>
+						<li><a id="add" href="#add_form" data-icon="add" data-rel="popup" data-position-to="window" data-transition="pop">追加</a></li>
+						<li><a id="edit" href="#" data-icon="edit">編集</a></li>
+						<li><a id="read" href="#" data-icon="check">既読化</a></li>
 					</ul>
 				</div>
 				
@@ -52,7 +52,6 @@
 				<div data-role="popup" id="add_folder" data-theme="a" style="padding: 10px 20px;">
 					<label>フォルダ名</label>
 					<input type="text" id="folder_name"></input>
-					<input type="hidden" id="folder_key" value="{{.FolderKey}}"></input>
 					<input id="add_folder_button" type="button" value="追加する" data-theme="c"></input>
 				</div>
 				
