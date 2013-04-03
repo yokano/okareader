@@ -31,6 +31,7 @@ type Feed struct {
 	Entries []string
 	Owner string
 	Parent string
+	Standard string // Atom or RSS1.0 or RSS2.0
 }
 
 type DAO struct {
@@ -679,4 +680,68 @@ func (this *DAO) clear(c appengine.Context) {
 		check(c, err)
 		datastore.DeleteMulti(c, keys)
 	}
+}
+
+/**
+ * フィードの更新
+ * 指定されたフィードに新しく追加されたエントリをデータストアに追加する
+ * @methodOf DAO
+ * @param {appengine.Context} c コンテキスト
+ * @param {string} encodedFeedKey フィードのキー
+ */
+func (this *DAO) updateFeed(c appengine.Context, encodedFeedKey string) {
+	var feed *Feed
+	var err error
+	var feedKey *datastore.Key
+	var savedEntry *Entry
+	var savedEntryKey *datastore.Key
+	var encodedSavedEntryKey string
+	var currentEntries []*Entry
+	var xml []byte
+	var i int
+	
+	// フィードの取得
+	feedKey, err = datastore.DecodeKey(encodedFeedKey)
+	check(c, err)
+
+	feed = new(Feed)
+	err = datastore.Get(c, feedKey, feed)
+	check(c, err)
+	
+	// 最新のエントリを取得
+	encodedSavedEntryKey = feed.Entries[0]
+	savedEntryKey, err = datastore.DecodeKey(encodedSavedEntryKey)
+	check(c, err)
+
+	savedEntry = new(Entry)
+	err = datastore.Get(c, savedEntryKey, savedEntry)
+	check(c, err)
+		
+	// URLからエントリをフェッチする
+	xml = getXML(c, feed.Id)
+	switch feed.Standard {
+		case "Atom":
+			var atom *Atom
+			atom = new(Atom)
+			_, currentEntries = atom.encode(c, xml)
+
+		case "RSS2.0":
+			var rss2 *RSS2
+			rss2 = new(RSS2)
+			_, currentEntries = rss2.encode(c, xml)
+			
+		case "RSS1.0":
+			var rss1 *RSS1
+			rss1 = new(RSS1)
+			_, currentEntries = rss1.encode(c, xml)
+	}
+	
+	// エントリ一覧から最新エントリと同じURLを探す
+	for i = 0; i < len(currentEntries); i++ {
+		
+	}
+	
+	// 同じ物が現れるまで上から順番に追加し続ける
+	
+	// 同じ物が現れたら break
 }

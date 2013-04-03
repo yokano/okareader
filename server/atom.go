@@ -4,63 +4,11 @@
 package okareader
 import (
 	"appengine"
-	"appengine/urlfetch"
-	"net/http"
 	"encoding/xml"
 )
 
-type EntryTemplate struct {
-	Id string `xml:"id"`
-	Link struct {
-		Href string `xml:"href,attr"`
-	} `xml:"link"`
-	Title string `xml:"title"`
-	Updated string `xml:"updated"`
-	Owner string
-}
+type Atom struct {
 
-type AtomTemplate struct {
-	Id string `xml:"id"`
-	Title string `xml:"title"`
-	Link struct {
-		Href string `xml:"href,attr"`
-	} `xml:"link"`
-	Entries []*EntryTemplate `xml:"entry"`
-	Owner string
-}
-
-/**
- * urlからatomファイルを受信して解析結果を返す
- * @function
- * @param c  コンテキスト
- * @param url atomファイルの場所
- */
-func (this *AtomTemplate) get(c appengine.Context, url string) (*Feed, []*Entry) {
-	var client *http.Client
-	var response *http.Response
-	var err error
-	var encoded []byte
-	var feed *Feed
-	var entries []*Entry
-	
-	// URLからatomを取得
-	client = urlfetch.Client(c)
-	response, err = client.Get(url)
-	check(c, err)
-	
-	// atomを受信
-	encoded = make([]byte, response.ContentLength)
-	_, err = response.Body.Read(encoded)
-	check(c, err)
-	
-	// atomを解析
-	err = xml.Unmarshal(encoded, this)
-	check(c, err)
-	
-	// atomを変換
-	feed, entries = this.encode()
-	
-	return feed, entries
 }
 
 /**
@@ -69,29 +17,53 @@ func (this *AtomTemplate) get(c appengine.Context, url string) (*Feed, []*Entry)
  * @returns entries {[]Entry} 変換後のエントリ
  * @returns feed {Feed} 変換後のFeed
  */
-func (this *AtomTemplate) encode() (*Feed, []*Entry){
+func (this *Atom) encode(c appengine.Context, xmldata []byte) (*Feed, []*Entry) {
+	type EntryTemplate struct {
+		Id string `xml:"id"`
+		Link struct {
+			Href string `xml:"href,attr"`
+		} `xml:"link"`
+		Title string `xml:"title"`
+		Owner string
+	}
+	type AtomTemplate struct {
+		Id string `xml:"id"`
+		Title string `xml:"title"`
+		Link struct {
+			Href string `xml:"href,attr"`
+		} `xml:"link"`
+		Entries []*EntryTemplate `xml:"entry"`
+		Owner string
+	}
 	var feed *Feed
 	var entryTemplate *EntryTemplate
 	var entries []*Entry
 	var entry *Entry
+	var err error
+	
 	feed = new(Feed)
 	feed.Entries = make([]string, 0)
 	entries = make([]*Entry, 0)
 	
+	// atomを解析
+	var atomTemplate = new(AtomTemplate)
+	err = xml.Unmarshal(xmldata, atomTemplate)
+	check(c, err)
+	
 	// エントリの変換
-	for _, entryTemplate = range this.Entries {
+	for _, entryTemplate = range atomTemplate.Entries {
 		entry = new(Entry)
 		entry.Id = entryTemplate.Id
 		entry.Link = entryTemplate.Link.Href
 		entry.Title = entryTemplate.Title
-		entry.Updated = entryTemplate.Updated
 		
 		entries = append(entries, entry)
 	}
 	
 	// Atomの変換
-	feed.Id = this.Link.Href
-	feed.Title = this.Title
+	feed.Id = atomTemplate.Link.Href
+	feed.Title = atomTemplate.Title
+	feed.Standard = "Atom"
 	
 	return feed, entries
 }

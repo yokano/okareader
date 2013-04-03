@@ -49,13 +49,13 @@ func (this *RSS1) encode(c appengine.Context, xmldata []byte) (*Feed, []*Entry) 
 	feed = new(Feed)
 	feed.Id = rdf.Channel.About
 	feed.Title = rdf.Channel.Title
+	feed.Standard = "RSS1.0"
 	
 	entries = make([]*Entry, len(rdf.Item))
 	for i, item = range rdf.Item {
 		entries[i] = new(Entry)
 		entries[i].Id = item.Link
 		entries[i].Title = item.Title
-		entries[i].Updated = item.Date
 		entries[i].Link = item.Link
 	}
 	

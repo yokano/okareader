@@ -11,7 +11,6 @@ import(
 	"appengine/user"
 	"net/http"
 	"fmt"
-	"appengine/urlfetch"
 	"encoding/xml"
 )
 
@@ -279,15 +278,15 @@ func (this *Controller) addFeed(w http.ResponseWriter, r *http.Request) {
 	folderKey = r.FormValue("folder_key")
 	
 	// XML取得
-	xml = this.getXML(c, url)
+	xml = getXML(c, url)
 	
 	// フィード取得
 	feedType = this.getType(c, xml)
 	switch feedType {
 		case "Atom":
-			var atomTemplate *AtomTemplate
-			atomTemplate = new(AtomTemplate)
-			feed, entries = atomTemplate.get(c, url)
+			var atom *Atom
+			atom = new(Atom)
+			feed, entries = atom.encode(c, xml)
 		case "RSS2.0":
 			var rss2 *RSS2
 			rss2 = new(RSS2)
@@ -381,30 +380,6 @@ func (this *Controller) renameFeed(w http.ResponseWriter, r *http.Request) {
 	c = appengine.NewContext(r)
 	dao = new(DAO)
 	dao.renameFeed(c, key, name)
-}
-
-/**
- * 指定されたURLからXMLファイルを受信して返す
- * @methodOf Controller
- * @param {appengine.Context} c コンテキスト
- * @param {string} url URL
- * @returns {[]byte} 受信したXMLデータ
- */
-func (this *Controller) getXML(c appengine.Context, url string) []byte {
-	var client *http.Client
-	var response *http.Response
-	var err error
-	var result []byte
-	
-	client = urlfetch.Client(c)
-	response, err = client.Get(url)
-	check(c, err)
-	
-	result = make([]byte, response.ContentLength)
-	_, err = response.Body.Read(result)
-	check(c, err)
-	
-	return result
 }
 
 /**

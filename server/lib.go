@@ -4,6 +4,8 @@
 package okareader
 import (
 	"appengine"
+	"appengine/urlfetch"
+	"net/http"
 )
 
 /**
@@ -41,6 +43,29 @@ func removeItem(s []string, target string) []string {
 			break
 		}
 	}
+	
+	return result
+}
+
+/**
+ * 指定されたURLからXMLファイルを受信して返す
+ * @param {appengine.Context} c コンテキスト
+ * @param {string} url URL
+ * @returns {[]byte} 受信したXMLデータ
+ */
+func getXML(c appengine.Context, url string) []byte {
+	var client *http.Client
+	var response *http.Response
+	var err error
+	var result []byte
+	
+	client = urlfetch.Client(c)
+	response, err = client.Get(url)
+	check(c, err)
+	
+	result = make([]byte, response.ContentLength)
+	_, err = response.Body.Read(result)
+	check(c, err)
 	
 	return result
 }
