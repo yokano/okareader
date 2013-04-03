@@ -52,6 +52,11 @@ func (this *Controller) handle() {
 		this.renameFolder(w, r)
 	})
 	
+	// フォルダの削除
+	http.HandleFunc("/api/removefolder", func(w http.ResponseWriter, r *http.Request) {
+		this.removeFolder(w, r)
+	})
+	
 	// フィードの追加
 	http.HandleFunc("/api/addfeed", func(w http.ResponseWriter, r *http.Request) {
 		this.addFeed(w, r)
@@ -203,6 +208,25 @@ func (this *Controller) renameFolder(w http.ResponseWriter, r *http.Request) {
 	c = appengine.NewContext(r)
 	dao = new(DAO)
 	dao.renameFolder(c, key, name)
+}
+
+/**
+ * フォルダの削除
+ * @methodOf Controller
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ * @param {HTTP GET} key フォルダのキー
+ */
+func (this *Controller) removeFolder(w http.ResponseWriter, r *http.Request) {
+	var c appengine.Context
+	var dao *DAO
+	var key string
+	
+	key = r.FormValue("key")
+	
+	c = appengine.NewContext(r)
+	dao = new(DAO)
+	dao.removeFolder(c, key)
 }
 
 /**

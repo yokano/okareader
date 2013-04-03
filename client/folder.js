@@ -178,4 +178,21 @@ $('.folder_page').live('pageinit', function() {
 			}
 		});
 	});
+	
+	// フォルダ削除ボタン
+	$('#remove_folder').bind('tap', function() {
+		var key = editTarget.attr('key');
+		$.ajax('/api/removefolder', {
+			data: {
+				key: key
+			},
+			success: function() {
+				editTarget.parent().parent().parent().remove();
+				$('#folder_menu').popup('close');
+			},
+			error: function() {
+				console.log('error');
+			}
+		});
+	});
 });

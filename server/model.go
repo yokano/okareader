@@ -118,9 +118,39 @@ func (this *DAO) updateFolder(c appengine.Context, encodedKey string, folder *Fo
 func (this *DAO) removeFolder(c appengine.Context, encodedKey string) {
 	var err error
 	var key *datastore.Key
+	var folder *Folder
+	var childKey string
+	var childType string
+	var encodedParentKey string
+	var parentKey *datastore.Key
+	var parentFolder *Folder
 	
 	key, err = datastore.DecodeKey(encodedKey)
 	check(c, err)
+	
+	folder = new(Folder)
+	err = datastore.Get(c, key, folder)
+	check(c, err)
+	
+	// 親からの参照を削除
+	encodedParentKey = folder.Parent
+	parentKey, err = datastore.DecodeKey(encodedParentKey)
+	check(c, err)
+	parentFolder = new(Folder)
+	err = datastore.Get(c, parentKey, parentFolder)
+	check(c, err)
+	parentFolder.Children = removeItem(parentFolder.Children, encodedKey)
+	_, err = datastore.Put(c, parentKey, parentFolder)
+	
+	// 子を削除
+	for _, childKey = range folder.Children {
+		childType, _ = this.getItem(c, childKey)
+		if childType == "folder" {
+			this.removeFolder(c, childKey)
+		} else if childType == "feed" {
+			this.removeFeed(c, childKey)
+		}
+	}
 	
 	err = datastore.Delete(c, key)
 	check(c, err)
