@@ -14,6 +14,7 @@ $('.folder_page').live('pageinit', function() {
 	var addFeed = $(this).find('#add_feed');
 	var editButton = $(this).find('#edit');
 	var editMode = false;
+	var editTarget = null;
 	
 	// フォルダを追加するボタン
 	addFolderButton.bind('tap', function() {
@@ -64,7 +65,11 @@ $('.folder_page').live('pageinit', function() {
 	// 編集ボタン
 	editButton.bind('tap', function() {
 		if(editMode) {
+
+			// 編集モード終了時の処理 //
+
 			editMode = false;
+			editTarget = null;
 			$(this).find('.ui-btn-text').html('編集');
 			$(this).find('.ui-icon').removeClass('ui-icon-check').addClass('ui-icon-edit');
 			
@@ -78,13 +83,21 @@ $('.folder_page').live('pageinit', function() {
 			$('#edit_message').remove();
 			
 		} else {
+		
+			// 編集モード開始時の処理 //
+		
 			editMode = true;
 			$(this).find('.ui-btn-text').html('完了');
 			$(this).find('.ui-icon').removeClass('ui-icon-edit').addClass('ui-icon-check');
 	
-			// リンクを無効化
+			// リンクを無効化と編集ポップアップの表示
 			$.each(contents.children(), function(i, data) {
 				$(data).find('a').bind('tap', function() {
+					editTarget = $(this);
+					$('#feed_menu').popup('open', {
+						transition: 'pop',
+						positionTo: 'window'
+					});
 					return false;
 				});
 			});
@@ -96,8 +109,27 @@ $('.folder_page').live('pageinit', function() {
 			
 			// メッセージ表示
 			contents.prepend($('<li id="edit_message" data-role="list-divider">編集したいタイトルをタップ</li>'));
-			
 			contents.listview('refresh');
 		}
+	});
+	
+	// フィード名変更ボタン
+	$('#feed_name_button').bind('tap', function() {
+		var name = $('#feed_name').val();
+		var key = editTarget.attr('key');
+		$.ajax('/api/renamefeed', {
+			data: {
+				name: name,
+				key: key
+			},
+			success: function() {
+				editTarget.find('.title').html(name);
+				$('#feed_name').val('');
+				$('#edit_feed').popup('close');
+			},
+			error: function() {
+				console.log('error');
+			}
+		});
 	});
 });

@@ -42,12 +42,12 @@ func (this *Controller) handle() {
 		this.feed(w, r)
 	})
 	
-	// フォルダの追加API
+	// フォルダの追加
 	http.HandleFunc("/api/addfolder", func(w http.ResponseWriter, r *http.Request) {
 		this.addFolder(w, r)
 	})
 	
-	// フィードの追加API
+	// フィードの追加
 	http.HandleFunc("/api/addfeed", func(w http.ResponseWriter, r *http.Request) {
 		this.addFeed(w, r)
 	})
@@ -60,6 +60,11 @@ func (this *Controller) handle() {
 	// フィード内のエントリをすべて既読化
 	http.HandleFunc("/api/readall", func(w http.ResponseWriter, r *http.Request) {
 		this.readAll(w, r)
+	})
+	
+	// フィード名の変更
+	http.HandleFunc("/api/renamefeed", func(w http.ResponseWriter, r *http.Request) {
+		this.renameFeed(w, r)
 	})
 	
 	// 全データ削除（デバッグ用）
@@ -265,6 +270,28 @@ func (this *Controller) readAll(w http.ResponseWriter, r *http.Request) {
 }
 
 /**
+ * API: フィードの名前を変更する
+ * @methodOf Controller
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ * @param {HTTP GET} name 新しい名前
+ * @param {HTTP GET} key 変更するフィードのキー
+ */
+func (this *Controller) renameFeed(w http.ResponseWriter, r *http.Request) {
+	var name string
+	var key string
+	var dao *DAO
+	var c appengine.Context
+	
+	name = r.FormValue("name")
+	key = r.FormValue("key")
+	
+	c = appengine.NewContext(r)
+	dao = new(DAO)
+	dao.renameFeed(c, key, name)
+}
+
+/**
  * 指定されたURLからXMLファイルを受信して返す
  * @methodOf Controller
  * @param {appengine.Context} c コンテキスト
@@ -316,7 +343,7 @@ func (this *Controller) getType(c appengine.Context, bytes []byte) string {
 		default:
 			result = "etc"
 	}
-
+	
 	return result
 }
 

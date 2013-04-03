@@ -327,6 +327,30 @@ func (this *DAO) registerFeed(c appengine.Context, feed *Feed, to string) (strin
 }
 
 /**
+ * フィード名を変更する
+ * @methodOf DAO
+ * @param {appengine.Context} c コンテキスト
+ * @param {string} encodedKey エンコード済みのフィードキー
+ * @param {string} name 新しい名前
+ */
+func (this *DAO) renameFeed(c appengine.Context, encodedKey string, name string) {
+	var key *datastore.Key
+	var err error
+	var feed *Feed
+	
+	key, err = datastore.DecodeKey(encodedKey)
+	check(c, err)
+	
+	feed = new(Feed)
+	err = datastore.Get(c, key, feed)
+	check(c, err)
+	
+	feed.Title = name
+	_, err = datastore.Put(c, key, feed)
+	check(c, err)
+}
+
+/**
  * エントリをフィードに追加する
  * @methodOf DAO
  * @param {appengine.Context} c コンテキスト

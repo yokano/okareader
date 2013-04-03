@@ -12,6 +12,7 @@
 
 	<body>
 		<div data-role="page" class="folder_page">
+			
 			<div data-role="header" data-position="fixed">
 				{{if .Parent}}
 				<a href="/folder?key={{.Parent}}" data-icon="back" data-transition="slide" data-direction="reverse">戻る</a>
@@ -19,16 +20,18 @@
 				<h1>{{.Title}}</h1>
 				<a href="{{.LogoutURL}}" data-icon="delete" class="ui-btn-right">ログアウト</a>
 			</div>
+			
 			<div data-role="content">
 				<ul id="contents" data-role="listview" data-count-theme="c">
 					{{$from := .FolderKey}}
 					{{range .Children}}
 					<li>
-						<a href="/{{.ItemType}}?key={{.Key}}" data-transition="slide">{{.Item.Title}} {{if .Item.Count}}<span class="ui-li-count">{{.Item.Count}}</span>{{end}}</a>
+						<a href="/{{.ItemType}}?key={{.Key}}" key={{.Key}} data-transition="slide"><span class="title">{{.Item.Title}}</span>{{if .Item.Count}}<span class="ui-li-count">{{.Item.Count}}</span>{{end}}</a>
 					</li>
 					{{end}}
 				</ul>
 			</div>
+			
 			<div data-role="footer" data-position="fixed">
 				<div data-role="navbar">
 					<ul>
@@ -38,12 +41,14 @@
 					</ul>
 				</div>
 				
-				<!-- ここから下はボタンを押した時のポップアップ -->
+				<!-- ここから下はボタンを押した時に表示されるポップアップ-->
+				<!-- 追加ボタンを押した時のポップアップ -->
 				<div data-role="popup" id="add_form" data-theme="a" style="padding: 10px 20px;">
 					<a href="#add_feed" data-role="button" data-theme="b" data-rel="popup" data-position-to="window" data-transition="pop">フィードを追加</a>
 					<a href="#add_folder" data-role="button" data-theme="c" data-rel="popup" data-position-to="window" data-transition="pop">フォルダを追加</a>
 				</div>
 				
+				<!-- フォルダ追加ポップアップ -->
 				<div data-role="popup" id="add_folder" data-theme="a" style="padding: 10px 20px;">
 					<label>フォルダ名</label>
 					<input type="text" id="folder_name"></input>
@@ -51,11 +56,26 @@
 					<input id="add_folder_button" type="button" value="追加する" data-theme="c"></input>
 				</div>
 				
+				<!-- フィード追加ポップアップ -->
 				<div data-role="popup" id="add_feed" data-theme="a" style="padding: 10px 20px;">
 					<label>配信URL(Atom, RSS2.0)</label>
 					<input type="text" id="feed_url" value="http://gigazine.net/news/rss_1.0/"></input>
 					<input id="add_feed_button" type="button" value="追加する" data-theme="c"></input>
 				</div>
+				
+				<!-- フィードの編集 or 削除ポップアップ -->
+				<div data-role="popup" id="feed_menu" data-theme="a" style="padding: 10px 20px;">
+					<a href="#edit_feed" data-role="button" data-theme="b" data-rel="popup" data-position-to="window" data-transition="pop">フィード名を変更する</a>
+					<a href="#remove_feed" data-role="button" data-theme="c" data-rel="popup" data-position-to="window" data-transition="pop">フィードを削除する</a>
+				</div>
+				
+				<!-- フィード名編集ポップアップ -->
+				<div data-role="popup" id="edit_feed" data-theme="a" style="padding: 10px 20px;">
+					<label>フィード名の編集</label>
+					<input id="feed_name" type="text"></input>
+					<input id="feed_name_button" type="button" value="変更する" data-theme="c"></input>
+				</div>
+				
 			</div>
 		</div>
 	</body>
