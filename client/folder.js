@@ -27,7 +27,7 @@ $('.folder_page').live('pageinit', function() {
 			},
 			dataType: 'json',
 			success: function(data) {
-				contents.append($('<li><a href="/folder?key=' + data.key + '">' + name + '</a></li>')).listview('refresh');
+				contents.append($('<li><a href="/folder?key=' + data.key + '" key="' + data.key + '" type="folder">' + name + '</a></li>')).listview('refresh');
 				addFolder.popup('close');
 				folderName.val('');
 			},
@@ -51,7 +51,7 @@ $('.folder_page').live('pageinit', function() {
 				if(data.duplicated) {
 					alert('既に登録済みのフィードです')
 				} else {
-					contents.append($('<li><a href="/feed?key=' + data.key + '"  key="' + data.key + '">' + data.name + '</a></li>')).listview('refresh');
+					contents.append($('<li><a href="/feed?key=' + data.key + '"  key="' + data.key + '" type="feed">' + data.name + '</a></li>')).listview('refresh');
 				}
 				addFeed.popup('close');
 				feedURL.val('');
@@ -94,10 +94,18 @@ $('.folder_page').live('pageinit', function() {
 			$.each(contents.children(), function(i, data) {
 				$(data).find('a').bind('tap', function() {
 					editTarget = $(this);
-					$('#feed_menu').popup('open', {
-						transition: 'pop',
-						positionTo: 'window'
-					});
+
+					if(editTarget.attr('type') == 'feed') {
+						$('#feed_menu').popup('open', {
+							transition: 'pop',
+							positionTo: 'window'
+						});
+					} else if(editTarget.attr('type') == 'folder') {
+						$('#folder_menu').popup('open', {
+							transition: 'pop',
+							positionTo: 'window'
+						});
+					}
 					return false;
 				});
 			});
@@ -143,6 +151,27 @@ $('.folder_page').live('pageinit', function() {
 			success: function() {
 				editTarget.parent().parent().parent().remove();
 				$('#feed_menu').popup('close');
+			},
+			error: function() {
+				console.log('error');
+			}
+		});
+	});
+	
+	// フォルダ名変更ボタン
+	$('#folder_name_button').bind('tap', function() {
+		var name = $('#folder_new_name').val();
+		var key = editTarget.attr('key');
+		
+		$.ajax('/api/renamefolder', {
+			data: {
+				key: key,
+				name: name
+			},
+			success: function() {
+				editTarget.find('.title').html(name);
+				$('#edit_folder').popup('close');
+				$('#folder_new_name').val('');
 			},
 			error: function() {
 				console.log('error');

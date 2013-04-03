@@ -47,6 +47,11 @@ func (this *Controller) handle() {
 		this.addFolder(w, r)
 	})
 	
+	// フォルダ名の変更
+	http.HandleFunc("/api/renamefolder", func(w http.ResponseWriter, r *http.Request) {
+		this.renameFolder(w, r)
+	})
+	
 	// フィードの追加
 	http.HandleFunc("/api/addfeed", func(w http.ResponseWriter, r *http.Request) {
 		this.addFeed(w, r)
@@ -176,6 +181,28 @@ func (this *Controller) addFolder(w http.ResponseWriter, r *http.Request) {
 	
 	resultKey = dao.registerFolder(c, u, title, false, encodedParentKey)
 	fmt.Fprintf(w, `{"key":"%s"}`, resultKey)
+}
+
+/**
+ * API:フォルダ名の変更
+ * @methodOf Controller
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ * @param {HTTP GET} key フォルダのキー
+ * @param {HTTP GET} name 新しいフォルダ名
+ */
+func (this *Controller) renameFolder(w http.ResponseWriter, r *http.Request) {
+	var key string
+	var name string
+	var c appengine.Context
+	var dao *DAO
+	
+	key = r.FormValue("key")
+	name = r.FormValue("name")
+	
+	c = appengine.NewContext(r)
+	dao = new(DAO)
+	dao.renameFolder(c, key, name)
 }
 
 /**

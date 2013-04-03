@@ -7,7 +7,6 @@ import (
 	"appengine"
 	"appengine/datastore"
 	"appengine/user"
-	"log"
 )
 
 type Folder struct {
@@ -145,6 +144,30 @@ func (this *DAO) getFolder(c appengine.Context, encodedKey string) *Folder {
 	check(c, err)
 	
 	return folder
+}
+
+/**
+ * フォルダ名の変更
+ * @methodOf DAO
+ * @param {appengine.Context} c コンテキスト
+ * @param {string} encodedKey フォルダのキー
+ * @param {string} name 新しいフォルダ名
+ */
+func (this *DAO) renameFolder(c appengine.Context, encodedKey string, name string) {
+	var key *datastore.Key
+	var folder *Folder
+	var err error
+	
+	key, err = datastore.DecodeKey(encodedKey)
+	check(c, err)
+	
+	folder = new(Folder)
+	err = datastore.Get(c, key, folder)
+	check(c, err)
+	
+	folder.Title = name
+	_, err = datastore.Put(c, key, folder)
+	check(c, err)
 }
 
 /**
@@ -368,44 +391,35 @@ func (this *DAO) removeFeed(c appengine.Context, encodedKey string) {
 	var entryKey *datastore.Key
 	
 	// フィードを取得
-	log.Printf("encodedKey:%s", encodedKey)
 	key, err = datastore.DecodeKey(encodedKey)
-	log.Printf("フィードキー変換")
 	check(c, err)
 	
 	feed = new(Feed)
-	log.Printf("フィード取得")
 	err = datastore.Get(c, key, feed)
 	
 	// 親フォルダからの参照を削除
 	encodedParentKey = feed.Parent
 	parentKey, err = datastore.DecodeKey(encodedParentKey)
-	log.Printf("親フォルダのキー変換")
 	check(c, err)
 	
 	parent = new(Folder)
-	log.Printf("親フォルダ取得")
 	err = datastore.Get(c, parentKey, parent)
 	check(c, err)
 	
 	parent.Children = removeItem(parent.Children, encodedKey)
 	_, err = datastore.Put(c, parentKey, parent)
-	log.Printf("親フォルダから削除")
 	check(c, err)
 	
 	// フィードに含まれるエントリを削除
 	for _, encodedEntryKey = range feed.Entries {
 		entryKey, err = datastore.DecodeKey(encodedEntryKey)
-		log.Printf("エントリのキー変換")
 		check(c, err)
 		err = datastore.Delete(c, entryKey)
-		log.Printf("エントリ削除")
 		check(c, err)
 	}
 	
 	// フィードを削除
 	err = datastore.Delete(c, key)
-	log.Printf("フィード削除")
 	check(c, err)
 }
 

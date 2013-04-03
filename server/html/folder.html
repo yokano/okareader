@@ -26,7 +26,7 @@
 					{{$from := .FolderKey}}
 					{{range .Children}}
 					<li>
-						<a href="/{{.ItemType}}?key={{.Key}}" key={{.Key}} data-transition="slide"><span class="title">{{.Item.Title}}</span>{{if .Item.Count}}<span class="ui-li-count">{{.Item.Count}}</span>{{end}}</a>
+						<a href="/{{.ItemType}}?key={{.Key}}" key={{.Key}} type="{{.ItemType}}" data-transition="slide"><span class="title">{{.Item.Title}}</span>{{if .Item.Count}}<span class="ui-li-count">{{.Item.Count}}</span>{{end}}</a>
 					</li>
 					{{end}}
 				</ul>
@@ -69,11 +69,24 @@
 					<input id="remove_feed" type="button" value="フィードを削除する" data-theme="c"></input>
 				</div>
 				
-				<!-- フィード名編集 -->
+				<!-- フィード名変更 -->
 				<div data-role="popup" id="edit_feed" data-theme="a" style="padding: 10px 20px;">
 					<label>フィード名の編集</label>
 					<input id="feed_name" type="text"></input>
 					<input id="feed_name_button" type="button" value="変更する" data-theme="c"></input>
+				</div>
+				
+				<!-- フォルダの編集 or 削除 -->
+				<div data-role="popup" id="folder_menu" data-theme="a" style="padding: 10px 20px;">
+					<a href="#edit_folder" data-role="button" data-theme="b"  data-rel="popup" data-position-to="window" data-transition="pop">フォルダ名を変更する</a>
+					<input id="remove_folder" type="button" value="フォルダを削除する" data-theme="c"></input>
+				</div>
+				
+				<!-- フォルダ名変更 -->
+				<div data-role="popup" id="edit_folder" data-theme="a" style="padding: 10px 20px;">
+					<label>フォルダ名の編集</label>
+					<input id="folder_new_name" type="text"></input>
+					<input id="folder_name_button" type="button" value="変更する" data-theme="c"></input>
 				</div>
 			</div>
 		</div>
