@@ -281,7 +281,7 @@ func (this *Controller) addFeed(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `{"duplicated":true}`)
 	} else {
 		dao.registerEntries(c, entries, feedKey)
-		fmt.Fprintf(w, `{"duplicated":false, "key":"%s", "name":"%s"}`, feedKey, feed.Title)
+		fmt.Fprintf(w, `{"duplicated":false, "key":"%s", "name":"%s", "count":%d}`, feedKey, feed.Title, len(entries))
 	}
 }
 

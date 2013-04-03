@@ -51,7 +51,7 @@ $('.folder_page').live('pageinit', function() {
 				if(data.duplicated) {
 					alert('既に登録済みのフィードです')
 				} else {
-					contents.append($('<li><a href="/feed?key=' + data.key + '"  key="' + data.key + '" type="feed">' + data.name + '</a></li>')).listview('refresh');
+					contents.append($('<li><a href="/feed?key=' + data.key + '"  key="' + data.key + '" type="feed"><span class="title">' + data.name + '</span><span class="ui-li-count">' + data.count + '</span></a></li>')).listview('refresh');
 				}
 				addFeed.popup('close');
 				feedURL.val('');
