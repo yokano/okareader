@@ -51,7 +51,7 @@ $('.folder_page').live('pageinit', function() {
 				if(data.duplicated) {
 					alert('既に登録済みのフィードです')
 				} else {
-					contents.append($('<li><a href="/feed?key=' + data.key + '">' + data.name + '</a></li>')).listview('refresh');
+					contents.append($('<li><a href="/feed?key=' + data.key + '"  key="' + data.key + '">' + data.name + '</a></li>')).listview('refresh');
 				}
 				addFeed.popup('close');
 				feedURL.val('');
@@ -126,6 +126,23 @@ $('.folder_page').live('pageinit', function() {
 				editTarget.find('.title').html(name);
 				$('#feed_name').val('');
 				$('#edit_feed').popup('close');
+			},
+			error: function() {
+				console.log('error');
+			}
+		});
+	});
+	
+	// フィード削除ボタン
+	$('#remove_feed').bind('tap', function() {
+		var key = editTarget.attr('key');
+		$.ajax('/api/removefeed', {
+			data: {
+				key: key
+			},
+			success: function() {
+				editTarget.parent().parent().parent().remove();
+				$('#feed_menu').popup('close');
 			},
 			error: function() {
 				console.log('error');

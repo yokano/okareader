@@ -67,6 +67,11 @@ func (this *Controller) handle() {
 		this.renameFeed(w, r)
 	})
 	
+	// フィードの削除
+	http.HandleFunc("/api/removefeed", func(w http.ResponseWriter, r *http.Request) {
+		this.removeFeed(w, r)
+	})
+	
 	// 全データ削除（デバッグ用）
 	http.HandleFunc("/clear", func(w http.ResponseWriter, r *http.Request) {
 		this.clear(w, r)
@@ -227,6 +232,25 @@ func (this *Controller) addFeed(w http.ResponseWriter, r *http.Request) {
 		dao.registerEntries(c, entries, feedKey)
 		fmt.Fprintf(w, `{"duplicated":false, "key":"%s", "name":"%s"}`, feedKey, feed.Title)
 	}
+}
+
+/**
+ * フィードの削除
+ * @methodOf Controller
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ * @param {HTTP GET} key 削除するフィードのキー
+ */
+func (this *Controller) removeFeed(w http.ResponseWriter, r *http.Request) {
+	var dao *DAO
+	var key string
+	var c appengine.Context
+	
+	key = r.FormValue("key")
+	
+	c = appengine.NewContext(r)
+	dao = new(DAO)
+	dao.removeFeed(c, key)
 }
 
 /**
