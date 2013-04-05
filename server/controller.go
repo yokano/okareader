@@ -11,7 +11,6 @@ import(
 	"appengine/user"
 	"net/http"
 	"fmt"
-	"encoding/xml"
 	"encoding/json"
 	"mime/multipart"
 )
@@ -100,7 +99,7 @@ func (this *Controller) handle() {
 	
 	// XMLのアップロード
 	http.HandleFunc("/uploadxml", func(w http.ResponseWriter, r *http.Request) {
-		this.uploadXML(w, r)
+		this.importXML(w, r)
 	})
 	
 	// 全データ削除（デバッグ用）
@@ -298,7 +297,7 @@ func (this *Controller) addFeed(w http.ResponseWriter, r *http.Request) {
 	xml = getXML(c, url)
 	
 	// フィード取得
-	feedType = this.getType(c, xml)
+	feedType = dao.getType(c, xml)
 	switch feedType {
 		case "Atom":
 			var atom *Atom
@@ -317,11 +316,10 @@ func (this *Controller) addFeed(w http.ResponseWriter, r *http.Request) {
 	feed.URL = url
 	
 	// フィード追加を試みる
-	feedKey, duplicated = dao.registerFeed(c, feed, folderKey)
+	feedKey, duplicated = dao.registerFeed(c, feed, entries, folderKey)
 	if duplicated {
 		fmt.Fprintf(w, `{"duplicated":true}`)
 	} else {
-		dao.registerEntries(c, entries, feedKey)
 		fmt.Fprintf(w, `{"duplicated":false, "key":"%s", "name":"%s", "count":%d}`, feedKey, feed.Title, len(entries))
 	}
 }
@@ -401,38 +399,6 @@ func (this *Controller) renameFeed(w http.ResponseWriter, r *http.Request) {
 }
 
 /**
- * XMLデータの規格を判断する
- * @methodOf Controller
- * @param {[]byte} bytes XMLデータ
- * @returns {string} フィードの規格(RSS1.0 / RSS2.0 / Atom / etc)
- */
-func (this *Controller) getType(c appengine.Context, bytes []byte) string {
-	type Checker struct {
-		XMLName xml.Name
-	}
-	var checker *Checker
-	var err error
-	var result string
-	
-	checker = new(Checker)
-	err = xml.Unmarshal(bytes, checker)
-	check(c, err)
-	
-	switch checker.XMLName.Local {
-		case "feed":
-			result = "Atom"
-		case "rss":
-			result = "RSS2.0"
-		case "RDF":
-			result = "RSS1.0"
-		default:
-			result = "etc"
-	}
-	
-	return result
-}
-
-/**
  * データを削除する
  * @methodOf Controller
  * @param {http.ResponseWriter} w 応答先
@@ -509,17 +475,20 @@ func (this *Controller) updateFolder(w http.ResponseWriter, r *http.Request) {
  * @methodOf Controller
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
- * @returns {bool} 成功したらtrue
+ * @param {HTTP GET} key 追加先のフォルダのキー
  */
-func (this *Controller) importXML(w http.ResponseWriter, r *http.Request) bool {
+func (this *Controller) importXML(w http.ResponseWriter, r *http.Request) {
 	var c appengine.Context
 	var err error
 	var file multipart.File
 	var fileHeader *multipart.FileHeader
 	var xml []byte
-	var result bool
+	var dao *DAO
+	var folderKey string
+	var view *View
 	
 	c = appengine.NewContext(r)
+	folderKey = r.FormValue("key")
 	file, fileHeader, err = r.FormFile("xml")
 	check(c, err)
 	
@@ -527,10 +496,11 @@ func (this *Controller) importXML(w http.ResponseWriter, r *http.Request) bool {
 		xml = make([]byte, r.ContentLength)
 		_, err = file.Read(xml)
 		check(c, err)
-		result = true
-	} else {
-		result = false
+		
+		dao = new(DAO)
+		dao.importXML(c, xml, folderKey)
+		
+		view = new(View)
+		view.showFolder(c, folderKey, w)
 	}
-	
-	return result
 }

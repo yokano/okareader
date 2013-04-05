@@ -60,7 +60,7 @@ func (this *Atom) encode(c appengine.Context, xmldata []byte) (*Feed, []*Entry) 
 	}
 	
 	// Atomの変換
-	feed.Id = atomTemplate.Link.Href
+	feed.URL = atomTemplate.Link.Href
 	feed.Title = atomTemplate.Title
 	feed.Standard = "Atom"
 	

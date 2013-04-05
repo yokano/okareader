@@ -46,7 +46,7 @@ func (this *RSS2) encode(c appengine.Context, xmldata []byte) (*Feed, []*Entry) 
 	check(c, err)
 	
 	feed = new(Feed)
-	feed.Id = channel.Link
+	feed.URL = channel.Link
 	feed.Title = channel.Title
 	feed.Standard = "RSS2.0"
 	

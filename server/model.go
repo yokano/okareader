@@ -7,6 +7,8 @@ import (
 	"appengine"
 	"appengine/datastore"
 	"appengine/user"
+	"encoding/xml"
+	"log"
 )
 
 type DAO struct {
@@ -32,7 +34,6 @@ type Folder struct {
 /**
  * フィード
  * @class
- * @member {string} Id フィードのURL
  * @member {string} Title フィードのタイトル
  * @member {[]string} Entries エントリのキーリスト
  * @member {string} Owner 所有者のユーザID
@@ -42,7 +43,6 @@ type Folder struct {
  * @member {string} URL フィードファイルの場所
  */
 type Feed struct {
-	Id string
 	Title string
 	Entries []string
 	Owner string
@@ -297,6 +297,11 @@ func (this *DAO) getEntriesCount(c appengine.Context, folderKey string) int {
 
 /**
  * ルートフォルダを取得
+ * @methodOf DAO
+ * @param {appengine.Context} c コンテキスト
+ * @param {*user.User} u ユーザオブジェクト
+ * @returns {string} ルートフォルダのキー
+ * @returns {*Folder} ルートフォルダ
  */
 func (this *DAO) getRootFolder(c appengine.Context, u *user.User) (string, *Folder) {
 	var root *Folder
@@ -349,11 +354,12 @@ func (this *DAO) getChildren(c appengine.Context, folder *Folder) []interface{} 
  * @methodOf DAO
  * @param {appengine.Context} c コンテキスト
  * @param {*Feed} feed 登録するフィードオブジェクト
+ * @param {[]*Entry} entries フィードのエントリリスト
  * @param {string} to 追加先のフォルダのキー
  * @returns {string} 追加したフィードのキーをエンコードしたもの　重複していたら空文字列
  * @returnss {bool} 重複していた場合はtrue
  */
-func (this *DAO) registerFeed(c appengine.Context, feed *Feed, to string) (string, bool) {
+func (this *DAO) registerFeed(c appengine.Context, feed *Feed, entries []*Entry, to string) (string, bool) {
 	var key *datastore.Key
 	var encodedKey string
 	var err error
@@ -390,6 +396,9 @@ func (this *DAO) registerFeed(c appengine.Context, feed *Feed, to string) (strin
 		parentFolder.Children = append(parentFolder.Children, encodedKey)
 		_, err = datastore.Put(c, parentFolderKey, parentFolder)
 		check(c, err)
+		
+		// エントリを追加
+		this.registerEntries(c, entries, encodedKey)
 	}
 	
 	return encodedKey, duplicated
@@ -663,7 +672,7 @@ func (this *DAO) exist(c appengine.Context, feed *Feed) bool {
 	var count int
 	
 	u = user.Current(c)
-	query = datastore.NewQuery("feed").Filter("Id =", feed.Id).Filter("Owner =", u.ID)
+	query = datastore.NewQuery("feed").Filter("URL =", feed.URL).Filter("Owner =", u.ID)
 	count, err = query.Count(c)
 	check(c, err)
 	
@@ -797,6 +806,139 @@ func (this *DAO) updateFolder(c appengine.Context, folderKey string) map[string]
 			feed = this.getFeed(c, childKey)
 			result[childKey] = len(feed.Entries)
 		}
+	}
+	
+	return result
+}
+
+/**
+ * XMLファイルをデータストアにインポートする
+ * @methodOf DAO
+ * @param {appengine.Context} c コンテキスト
+ * @param {[]byte} xmldate XMLファイル
+ * @param {string} folderKey 追加先のフォルダのキー
+ */
+func (this *DAO) importXML(c appengine.Context, xmldata []byte, folderKey string) {
+	type OUTLINE struct {
+		Outline []OUTLINE `xml:"outline"`
+		Title string `xml:"title,attr"`
+		XMLURL string `xml:"xmlUrl,attr"`
+		HTMLURL string `xml:"htmlUrl,attr"`
+	}
+	type OPML struct {
+		Outline []OUTLINE `xml:"body>outline"`
+	}
+	var opml *OPML
+	var err error
+	var feed *Feed
+	var depth1 OUTLINE
+	var depth2 OUTLINE
+	var u *user.User
+	var parentKey string
+	var entries []*Entry
+	var duplicated bool
+	
+	u = user.Current(c)
+	
+	opml = new(OPML)
+	err = xml.Unmarshal(xmldata, opml)
+	check(c, err)
+	
+	for _, depth1 = range opml.Outline {
+		if depth1.XMLURL == "" {
+			parentKey = this.registerFolder(c, u, depth1.Title, false, folderKey)
+			log.Printf("%s", depth1.Title)
+			for _, depth2 = range depth1.Outline {
+				feed = new(Feed)
+				entries = make([]*Entry, 0)
+				feed, entries = this.getFeedFromXML(c, depth2.XMLURL)
+				_, duplicated = this.registerFeed(c, feed, entries, parentKey)
+				if duplicated {
+					log.Printf("    失敗：%s", feed.Title)
+				} else {
+					log.Printf("    成功: %s", feed.Title)
+				}
+			}
+		} else {
+			feed = new(Feed)
+			entries = make([]*Entry, 0)
+			feed, entries = this.getFeedFromXML(c, depth2.XMLURL)
+			_, duplicated = this.registerFeed(c, feed, entries, parentKey)
+			if duplicated {
+				log.Printf("失敗：%s", feed.Title)
+			} else {
+				log.Printf("成功: %s", feed.Title)
+			}
+		}
+	}
+}
+
+/**
+ * XMLのURLからフィードを取得する
+ * @methodOf DAO
+ * @param {appengine.Context} c コンテキスト
+ * @param {string} url XMLファイルの場所
+ * @returns {*Feed} フィード
+ * @returns {[]*Entries} フィードのエントリリスト
+ */
+func (this *DAO) getFeedFromXML(c appengine.Context, url string) (*Feed, []*Entry) {
+	var feedXML []byte
+	var feedType string
+	var feed *Feed
+	var entries []*Entry
+	
+	feedXML = getXML(c, url)
+	
+	feed = new(Feed)
+	entries = make([]*Entry, 0)
+	feedType = this.getType(c, feedXML)
+	switch feedType {
+		case "Atom":
+			var atom *Atom
+			atom = new(Atom)
+			feed, entries = atom.encode(c, feedXML)
+		case "RSS2.0":
+			var rss2 *RSS2
+			rss2 = new(RSS2)
+			feed, entries = rss2.encode(c, feedXML)
+		case "RSS1.0":
+			var rss1 *RSS1
+			rss1 = new(RSS1)
+			feed, entries = rss1.encode(c, feedXML)
+		case "etc":
+	}
+	feed.URL = url
+	
+	return feed, entries
+}
+
+/**
+ * XMLデータの規格を判断する
+ * @methodOf DAO
+ * @param {[]byte} bytes XMLデータ
+ * @returns {string} フィードの規格(RSS1.0 / RSS2.0 / Atom / etc)
+ */
+func (this *DAO) getType(c appengine.Context, bytes []byte) string {
+	type Checker struct {
+		XMLName xml.Name
+	}
+	var checker *Checker
+	var err error
+	var result string
+	
+	checker = new(Checker)
+	err = xml.Unmarshal(bytes, checker)
+	check(c, err)
+	
+	switch checker.XMLName.Local {
+		case "feed":
+			result = "Atom"
+		case "rss":
+			result = "RSS2.0"
+		case "RDF":
+			result = "RSS1.0"
+		default:
+			result = "etc"
 	}
 	
 	return result

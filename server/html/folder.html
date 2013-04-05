@@ -69,6 +69,7 @@
 					<form action="/uploadxml" method="POST" enctype="multipart/form-data" data-ajax="false">
 						<label>XMLファイルをアップロードしてください</label>
 						<input type="file" id="xml" name="xml"></input>
+						<input type="hidden" name="key" value="{{.FolderKey}}"></input>
 						<input type="submit" value="送信"></input>
 					</form>
 				</div>
