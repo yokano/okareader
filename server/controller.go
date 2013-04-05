@@ -12,6 +12,7 @@ import(
 	"net/http"
 	"fmt"
 	"encoding/xml"
+	"encoding/json"
 )
 
 type Controller struct {
@@ -64,6 +65,11 @@ func (this *Controller) handle() {
 	// フィードの追加
 	http.HandleFunc("/api/addfeed", func(w http.ResponseWriter, r *http.Request) {
 		this.addFeed(w, r)
+	})
+	
+	// フィードを更新
+	http.HandleFunc("/api/updatefeed", func(w http.ResponseWriter, r *http.Request) {
+		this.updateFeed(w, r)
 	})
 	
 	// １件のエントリの既読化
@@ -297,6 +303,7 @@ func (this *Controller) addFeed(w http.ResponseWriter, r *http.Request) {
 			feed, entries = rss1.encode(c, xml)
 		case "etc":
 	}
+	feed.URL = url
 	
 	// フィード追加を試みる
 	feedKey, duplicated = dao.registerFeed(c, feed, folderKey)
@@ -427,4 +434,32 @@ func (this *Controller) clear(w http.ResponseWriter, r *http.Request) {
 	dao = new(DAO)
 	dao.clear(c)
 	this.home(w, r)
+}
+
+/**
+ * フィードを更新する
+ * @methodOf Controller
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ * @param {HTTP GET} key フィードキー
+ * @returns {JSON} 追加したエントリリストをクライアントへ返す
+ */
+func (this *Controller) updateFeed(w http.ResponseWriter, r *http.Request) {
+	var key string
+	var c appengine.Context
+	var dao *DAO
+	var newEntries []*Entry
+	var result []byte
+	var err error
+	
+	key = r.FormValue("key")
+	
+	c = appengine.NewContext(r)
+	dao = new(DAO)
+	newEntries = dao.updateFeed(c, key)
+	
+	result, err = json.Marshal(newEntries)
+	check(c, err)
+	
+	fmt.Fprintf(w, "%s", result)
 }

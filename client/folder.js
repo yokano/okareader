@@ -212,4 +212,9 @@ $('.folder_page').live('pageinit', function() {
 			});
 		}
 	});
+	
+	// フォルダの更新ボタン
+	$('#reload').bind('tap', function() {
+		alert('更新');
+	});
 });

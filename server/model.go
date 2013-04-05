@@ -9,32 +9,62 @@ import (
 	"appengine/user"
 )
 
+type DAO struct {
+}
+
+/**
+ * フォルダ
+ * @class
+ * @member {string} Type ルートフォルダなら"root" それ以外は"other"
+ * @member {string} Title フォルダのタイトル
+ * @member {[]string} Children 子への参照キーリスト
+ * @member {string} Owner フォルダ作成者のユーザID
+ * @member {string} Parent 親フォルダへの参照キー
+ */
 type Folder struct {
-	Type string  // root or other
+	Type string
 	Title string
 	Children []string
 	Owner string
 	Parent string
 }
 
-type Entry struct {
-	Id string
-	Link string
-	Title string
-	Updated string
-	Owner string
-}
-
+/**
+ * フィード
+ * @class
+ * @member {string} Id フィードのURL
+ * @member {string} Title フィードのタイトル
+ * @member {[]string} Entries エントリのキーリスト
+ * @member {string} Owner 所有者のユーザID
+ * @member {string} Parent 親フォルダへの参照キー
+ * @member {string} Standard フィードの規格("Atom"/"RSS1.0"/"RSS2.0"のいずれか)
+ * @member {string} FinalEntry 最後に取得したエントリのキー
+ * @member {string} URL フィードファイルの場所
+ */
 type Feed struct {
 	Id string
 	Title string
 	Entries []string
 	Owner string
 	Parent string
-	Standard string // Atom or RSS1.0 or RSS2.0
+	Standard string
+	FinalEntry string
+	URL string
 }
 
-type DAO struct {
+/**
+ * エントリ
+ * @class
+ * @member {string} Id エントリのURL
+ * @member {string} Link エントリのURL
+ * @member {string} Title エントリのタイトル
+ * @member {string} Owner 所有者のユーザID
+ */
+type Entry struct {
+	Id string
+	Link string
+	Title string
+	Owner string
 }
 
 /**
@@ -503,7 +533,7 @@ func (this *DAO) readFeed(c appengine.Context, encodedKey string) {
 }
 
 /**
- * エントリをフィードに追加する
+ * 複数のエントリをフィードに一括で新規追加する
  * @methodOf DAO
  * @param {appengine.Context} c コンテキスト
  * @param {[]*Entry} entries 追加するエントリ配列
@@ -519,22 +549,26 @@ func (this *DAO) registerEntries(c appengine.Context, entries []*Entry, to strin
 	var feed *Feed
 	var feedKey *datastore.Key
 	var u *user.User
-	
+
 	feedKey, err = datastore.DecodeKey(to)
 	feed = this.getFeed(c, to)
 	
 	u = user.Current(c)
 	
 	result = make([]string, len(entries))
+		
 	for i, entry = range entries {
 		entry.Owner = u.ID
 		key = datastore.NewIncompleteKey(c, "entry", nil)
 		key, err = datastore.Put(c, key, entry)
 		check(c, err)
 		result[i] = key.Encode()
-		feed.Entries = append(feed.Entries, result[i])
 	}
+	feed.Entries = prepend(feed.Entries, result)
 	
+	// 最新のエントリを保存
+	feed.FinalEntry = feed.Entries[0]
+		
 	_, err = datastore.Put(c, feedKey, feed)
 	
 	return result
@@ -688,8 +722,9 @@ func (this *DAO) clear(c appengine.Context) {
  * @methodOf DAO
  * @param {appengine.Context} c コンテキスト
  * @param {string} encodedFeedKey フィードのキー
+ * @returns {[]*Entry} 追加したエントリ一覧
  */
-func (this *DAO) updateFeed(c appengine.Context, encodedFeedKey string) {
+func (this *DAO) updateFeed(c appengine.Context, encodedFeedKey string) []*Entry {
 	var feed *Feed
 	var err error
 	var feedKey *datastore.Key
@@ -697,6 +732,7 @@ func (this *DAO) updateFeed(c appengine.Context, encodedFeedKey string) {
 	var savedEntryKey *datastore.Key
 	var encodedSavedEntryKey string
 	var currentEntries []*Entry
+	var newEntries []*Entry
 	var xml []byte
 	var i int
 	
@@ -709,16 +745,17 @@ func (this *DAO) updateFeed(c appengine.Context, encodedFeedKey string) {
 	check(c, err)
 	
 	// 最新のエントリを取得
-	encodedSavedEntryKey = feed.Entries[0]
+	encodedSavedEntryKey = feed.FinalEntry
 	savedEntryKey, err = datastore.DecodeKey(encodedSavedEntryKey)
 	check(c, err)
 
 	savedEntry = new(Entry)
 	err = datastore.Get(c, savedEntryKey, savedEntry)
 	check(c, err)
-		
+	
 	// URLからエントリをフェッチする
-	xml = getXML(c, feed.Id)
+	xml = getXML(c, feed.URL)
+	currentEntries = make([]*Entry, 0)
 	switch feed.Standard {
 		case "Atom":
 			var atom *Atom
@@ -737,11 +774,14 @@ func (this *DAO) updateFeed(c appengine.Context, encodedFeedKey string) {
 	}
 	
 	// エントリ一覧から最新エントリと同じURLを探す
+	newEntries = make([]*Entry, 0)
 	for i = 0; i < len(currentEntries); i++ {
-		
+		if currentEntries[i].Id == savedEntry.Id {
+			break
+		}
+		newEntries = append(newEntries, currentEntries[i])
 	}
+	this.registerEntries(c, newEntries, encodedFeedKey)
 	
-	// 同じ物が現れるまで上から順番に追加し続ける
-	
-	// 同じ物が現れたら break
+	return newEntries
 }

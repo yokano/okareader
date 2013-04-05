@@ -49,6 +49,7 @@ func removeItem(s []string, target string) []string {
 
 /**
  * 指定されたURLからXMLファイルを受信して返す
+ * @function
  * @param {appengine.Context} c コンテキスト
  * @param {string} url URL
  * @returns {[]byte} 受信したXMLデータ
@@ -66,6 +67,22 @@ func getXML(c appengine.Context, url string) []byte {
 	result = make([]byte, response.ContentLength)
 	_, err = response.Body.Read(result)
 	check(c, err)
+	
+	return result
+}
+
+/**
+ * スライスの先頭にスライスを挿入する
+ * @function
+ * @param {[]string} dst 追加されるリスト
+ * @param {[]string} src 追加するリスト
+ */
+func prepend(dst []string, src []string) []string {
+	var result []string
+	
+	result = make([]string, 0)
+	result = append(result, src...)
+	result = append(result, dst...)
 	
 	return result
 }
