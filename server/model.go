@@ -125,22 +125,6 @@ func (this *DAO) registerFolder(c appengine.Context, u *user.User, title string,
 }
 
 /**
- * フォルダの更新
- * @param {appengine.Context} c コンテキスト
- * @param {string} encodedKey 文字列
- */
-func (this *DAO) updateFolder(c appengine.Context, encodedKey string, folder *Folder) {
-	var key *datastore.Key
-	var err error
-	
-	key, err = datastore.DecodeKey(encodedKey)
-	check(c, err)
-	
-	_, err = datastore.Put(c, key, folder)
-	check(c, err)
-}
-
-/**
  * フォルダの削除
  * 中身も全て削除する
  * rootフォルダは削除不可
@@ -784,4 +768,36 @@ func (this *DAO) updateFeed(c appengine.Context, encodedFeedKey string) []*Entry
 	this.registerEntries(c, newEntries, encodedFeedKey)
 	
 	return newEntries
+}
+
+/**
+ * フォルダの更新
+ * @methodOf DAO
+ * @param {appengine.Context} c コンテキスト
+ * @param {string} encodedFolderKey フォルダのキー
+ * @returns {map[string]int} 更新後の各フォルダ、フィードのエントリ件数
+ */
+func (this *DAO) updateFolder(c appengine.Context, folderKey string) map[string]int {
+	var folder *Folder
+	var childKey string
+	var childType string
+	var result map[string]int
+	var feed *Feed
+	
+	folder = this.getFolder(c, folderKey)
+	
+	result = make(map[string]int)
+	for _, childKey = range folder.Children {
+		childType, _ = this.getItem(c, childKey)
+		if childType == "folder" {
+			this.updateFolder(c, childKey)
+			result[childKey] = this.getEntriesCount(c, childKey)
+		} else if childType == "feed" {
+			this.updateFeed(c, childKey)
+			feed = this.getFeed(c, childKey)
+			result[childKey] = len(feed.Entries)
+		}
+	}
+	
+	return result
 }

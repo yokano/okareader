@@ -62,6 +62,11 @@ func (this *Controller) handle() {
 		this.readFolder(w, r)
 	})
 	
+	// フォルダの更新
+	http.HandleFunc("/api/updatefolder", func(w http.ResponseWriter, r *http.Request) {
+		this.updateFolder(w, r)
+	})
+	
 	// フィードの追加
 	http.HandleFunc("/api/addfeed", func(w http.ResponseWriter, r *http.Request) {
 		this.addFeed(w, r)
@@ -462,4 +467,33 @@ func (this *Controller) updateFeed(w http.ResponseWriter, r *http.Request) {
 	check(c, err)
 	
 	fmt.Fprintf(w, "%s", result)
+}
+
+/**
+ * フォルダを更新する
+ * @methodOf Controller
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ * @param {HTTP GET} key フォルダのキー
+ * @returns {JSON} フォルダの直下の各アイテムの更新件数
+ */
+func (this *Controller) updateFolder(w http.ResponseWriter, r *http.Request) {
+	var key string
+	var dao *DAO
+	var c appengine.Context
+	var result map[string]int
+	var response []byte
+	var err error
+	
+	key = r.FormValue("key")
+	dao = new(DAO)
+	c = appengine.NewContext(r)
+	
+	result = make(map[string]int)
+	result = dao.updateFolder(c, key)
+	
+	response, err = json.Marshal(result)
+	check(c, err)
+	
+	fmt.Fprintf(w, "%s", response)
 }

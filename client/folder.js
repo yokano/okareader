@@ -215,6 +215,19 @@ $('.folder_page').live('pageinit', function() {
 	
 	// フォルダの更新ボタン
 	$('#reload').bind('tap', function() {
-		alert('更新');
+		$.ajax('/api/updatefolder', {
+			data: {
+				key: folderKey
+			},
+			dataType: 'json',
+			success: function(data) {
+				for(var key in data) {
+					$('[key=' + key + ']').find('.ui-li-count').html(data[key]);
+				}
+			},
+			error: function() {
+				console.log('error');
+			}
+		});
 	});
 });
