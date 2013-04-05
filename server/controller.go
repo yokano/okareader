@@ -13,6 +13,7 @@ import(
 	"fmt"
 	"encoding/xml"
 	"encoding/json"
+	"mime/multipart"
 )
 
 type Controller struct {
@@ -95,6 +96,11 @@ func (this *Controller) handle() {
 	// フィードの削除
 	http.HandleFunc("/api/removefeed", func(w http.ResponseWriter, r *http.Request) {
 		this.removeFeed(w, r)
+	})
+	
+	// XMLのアップロード
+	http.HandleFunc("/uploadxml", func(w http.ResponseWriter, r *http.Request) {
+		this.uploadXML(w, r)
 	})
 	
 	// 全データ削除（デバッグ用）
@@ -496,4 +502,35 @@ func (this *Controller) updateFolder(w http.ResponseWriter, r *http.Request) {
 	check(c, err)
 	
 	fmt.Fprintf(w, "%s", response)
+}
+
+/**
+ * XMLファイルのアップロード
+ * @methodOf Controller
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ * @returns {bool} 成功したらtrue
+ */
+func (this *Controller) importXML(w http.ResponseWriter, r *http.Request) bool {
+	var c appengine.Context
+	var err error
+	var file multipart.File
+	var fileHeader *multipart.FileHeader
+	var xml []byte
+	var result bool
+	
+	c = appengine.NewContext(r)
+	file, fileHeader, err = r.FormFile("xml")
+	check(c, err)
+	
+	if fileHeader.Header.Get("Content-Type") == "text/xml" {
+		xml = make([]byte, r.ContentLength)
+		_, err = file.Read(xml)
+		check(c, err)
+		result = true
+	} else {
+		result = false
+	}
+	
+	return result
 }

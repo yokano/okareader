@@ -43,10 +43,11 @@
 				</div>
 				
 				<!-- ここから下はボタンを押した時に表示されるポップアップ-->
-				<!-- フィード or フォルダ追加 -->
+				<!-- 追加ボタンを押したときのポップアップ -->
 				<div data-role="popup" id="add_form" data-theme="a" style="padding: 10px 20px;">
-					<a href="#add_feed" data-role="button" data-theme="b" data-rel="popup" data-position-to="window" data-transition="pop">フィードを追加</a>
+					<a href="#add_feed" data-role="button" data-theme="c" data-rel="popup" data-position-to="window" data-transition="pop">フィードを追加</a>
 					<a href="#add_folder" data-role="button" data-theme="c" data-rel="popup" data-position-to="window" data-transition="pop">フォルダを追加</a>
+					<a href="#import_xml" data-role="button" data-theme="b" data-rel="popup" data-position-to="window" data-transition="pop">XMLファイルのインポート</a>
 				</div>
 				
 				<!-- フォルダ追加 -->
@@ -61,6 +62,15 @@
 					<label>配信URL(Atom, RSS2.0)</label>
 					<input type="text" id="feed_url" value="http://gigazine.net/news/rss_1.0/"></input>
 					<input id="add_feed_button" type="button" value="追加する" data-theme="c"></input>
+				</div>
+				
+				<!-- XMLファイルのインポート -->
+				<div data-role="popup" id="import_xml" data-theme="a" style="padding: 10px 20px;">
+					<form action="/uploadxml" method="POST" enctype="multipart/form-data" data-ajax="false">
+						<label>XMLファイルをアップロードしてください</label>
+						<input type="file" id="xml" name="xml"></input>
+						<input type="submit" value="送信"></input>
+					</form>
 				</div>
 				
 				<!-- フィードの編集 or 削除 -->
