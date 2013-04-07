@@ -118,3 +118,10 @@ func (this *View) showLogin(c appengine.Context, w http.ResponseWriter) {
 	
 	t.Execute(w, contents)
 }
+
+/**
+ * 
+ */
+func (this *View) showImportList(c appengine.Context, w http.ResponseWriter) {
+	
+}

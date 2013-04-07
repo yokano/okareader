@@ -812,6 +812,72 @@ func (this *DAO) updateFolder(c appengine.Context, folderKey string) map[string]
 }
 
 /**
+ * XMLファイルを解析してフォルダ・フィードツリーを返す
+ * @methodOf DAO
+ * @param {appengine.Context} c コンテキスト
+ * @param {[]byte} xmldata XMLデータ
+ * @returns {[]interface{}} フォルダ・フィードツリー
+ */
+func (this *DAO) getTreeFromXML(c appengine.Context, xmldata []byte) []interface{} {
+	type Feed struct {
+		title string
+		xmlURL string
+		htmlURL string
+	}
+	type Folder struct {
+		title string
+		children []*Feed
+	}
+	type OUTLINE struct {
+		Outline []OUTLINE `xml:"outline"`
+		Title string `xml:"title,attr"`
+		XMLURL string `xml:"xmlUrl,attr"`
+		HTMLURL string `xml:"htmlUrl,attr"`
+	}
+	type OPML struct {
+		Outline []OUTLINE `xml:"body>outline"`
+	}
+	var opml *OPML
+	var err error
+	var depth1 OUTLINE
+	var depth2 OUTLINE
+	var i int
+	var j int
+	var tree []interface{}
+	var folder *Folder
+	var feed *Feed
+	
+	opml = new(OPML)
+	err = xml.Unmarshal(xmldata, opml)
+	check(c, err)
+	
+	tree = make([]interface{}, len(opml.Outline))
+	for i, depth1 = range opml.Outline {
+		if depth1.XMLURL == "" {
+			folder = new(Folder)
+			folder.title = depth1.Title
+			folder.children = make([]*Feed, len(depth1.Outline))
+			for j, depth2 = range depth1.Outline {
+				feed = new(Feed)
+				feed.title = depth2.Title
+				feed.xmlURL = depth2.XMLURL
+				feed.htmlURL = depth2.HTMLURL
+				folder.children[j] = feed
+			}
+			tree[i] = folder
+		} else {
+			feed = new(Feed)
+			feed.title = depth1.Title
+			feed.xmlURL = depth1.XMLURL
+			feed.htmlURL = depth1.HTMLURL
+			tree[i] = feed
+		}
+	}
+
+	return tree
+}
+
+/**
  * XMLファイルをデータストアにインポートする
  * @methodOf DAO
  * @param {appengine.Context} c コンテキスト
@@ -846,6 +912,7 @@ func (this *DAO) importXML(c appengine.Context, xmldata []byte, folderKey string
 	
 	for _, depth1 = range opml.Outline {
 		if depth1.XMLURL == "" {
+			// フォルダ
 			parentKey = this.registerFolder(c, u, depth1.Title, false, folderKey)
 			log.Printf("%s", depth1.Title)
 			for _, depth2 = range depth1.Outline {
@@ -860,6 +927,7 @@ func (this *DAO) importXML(c appengine.Context, xmldata []byte, folderKey string
 				}
 			}
 		} else {
+			// フィード
 			feed = new(Feed)
 			entries = make([]*Entry, 0)
 			feed, entries = this.getFeedFromXML(c, depth2.XMLURL)

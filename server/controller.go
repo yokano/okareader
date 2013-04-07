@@ -10,9 +10,10 @@ import(
 	"appengine"
 	"appengine/user"
 	"net/http"
-	"fmt"
 	"encoding/json"
 	"mime/multipart"
+	"fmt"
+	"log"
 )
 
 type Controller struct {
@@ -486,6 +487,7 @@ func (this *Controller) importXML(w http.ResponseWriter, r *http.Request) {
 	var dao *DAO
 	var folderKey string
 	var view *View
+	var tree []interface{}
 	
 	c = appengine.NewContext(r)
 	folderKey = r.FormValue("key")
@@ -498,6 +500,10 @@ func (this *Controller) importXML(w http.ResponseWriter, r *http.Request) {
 		check(c, err)
 		
 		dao = new(DAO)
+		tree = dao.getTreeFromXML(c, xml)
+		log.Printf("#############################")
+		log.Printf("TREE: %#v", tree)
+		log.Printf("#############################")
 		dao.importXML(c, xml, folderKey)
 		
 		view = new(View)
