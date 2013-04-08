@@ -10,6 +10,7 @@ import (
 	"appengine"
 	"appengine/user"
 	"net/http"
+	text "text/template"
 )
 
 /**
@@ -120,8 +121,37 @@ func (this *View) showLogin(c appengine.Context, w http.ResponseWriter) {
 }
 
 /**
- * 
+ * XMLファイルインポート前の確認画面
+ * @param {appengine.Context} c コンテキスト
+ * @param {http.ResponseWriter} w 応答先
+ * @param {[]*Node} tree 追加するフォルダ・フィードツリー
  */
-func (this *View) showImportList(c appengine.Context, w http.ResponseWriter) {
+func (this *View) confirmImporting(c appengine.Context, w http.ResponseWriter, tree []*Node) {
+	var t *text.Template
+	var err error
+	var contents map[string]string
+	var node *Node
+	var child *Node
+	var html string
 	
+	t, err = text.ParseFiles("server/html/import.html")
+	check(c, err)
+	
+	html = ""
+	for _, node = range tree {
+		if node.kind == "folder" {
+			html = join(html, `<li>`, node.title, `</li>`)
+			html = join(html, `<ul>`)
+			for _, child = range node.children {
+				html = join(html, `<li>`, child.title, `</li>`)
+			}
+			html = join(html, `</ul>`)
+		} else if node.kind == "feed" {
+			html = join(html, `<li>`, node.title, `</li>`)
+		}
+	}
+
+	contents = make(map[string]string, 1)
+	contents["tree"] = html
+	t.Execute(w, contents)
 }

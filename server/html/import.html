@@ -17,15 +17,13 @@
 				<a href="{{.LogoutURL}}" data-icon="delete" class="ui-btn-right">ログアウト</a>
 			</div>
 			<div data-role="content">
-				<h1>以下のフィードを登録しますか？</h1>
-				<ul>{{.ImportFeeds}}</ul>
+				<p>以下のフィードを登録しますか？</p>
+				<ul>
+					{{.tree}}
+				</ul>
 			</div>
 			<div data-role="footer" data-position="fixed">
-				<div data-role="navbar">
-					<ul>
-						<li>登録する</li>
-					</ul>
-				</div>
+				<><>
 			</div>
 		</div>
 	</body>

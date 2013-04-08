@@ -68,6 +68,17 @@ type Entry struct {
 }
 
 /**
+ * XMLインポート時のフォルダツリーで使用する
+ */
+type Node struct {
+	kind string
+	title string
+	children []*Node
+	xmlURL string
+	htmlURL string
+}
+
+/**
  * フォルダの新規登録
  * @param c {Context} コンテクスト
  * @param u {User} ユーザ
@@ -818,16 +829,7 @@ func (this *DAO) updateFolder(c appengine.Context, folderKey string) map[string]
  * @param {[]byte} xmldata XMLデータ
  * @returns {[]interface{}} フォルダ・フィードツリー
  */
-func (this *DAO) getTreeFromXML(c appengine.Context, xmldata []byte) []interface{} {
-	type Feed struct {
-		title string
-		xmlURL string
-		htmlURL string
-	}
-	type Folder struct {
-		title string
-		children []*Feed
-	}
+func (this *DAO) getTreeFromXML(c appengine.Context, xmldata []byte) []*Node {
 	type OUTLINE struct {
 		Outline []OUTLINE `xml:"outline"`
 		Title string `xml:"title,attr"`
@@ -843,22 +845,24 @@ func (this *DAO) getTreeFromXML(c appengine.Context, xmldata []byte) []interface
 	var depth2 OUTLINE
 	var i int
 	var j int
-	var tree []interface{}
-	var folder *Folder
-	var feed *Feed
+	var tree []*Node
+	var folder *Node
+	var feed *Node
 	
 	opml = new(OPML)
 	err = xml.Unmarshal(xmldata, opml)
 	check(c, err)
 	
-	tree = make([]interface{}, len(opml.Outline))
+	tree = make([]*Node, len(opml.Outline))
 	for i, depth1 = range opml.Outline {
 		if depth1.XMLURL == "" {
-			folder = new(Folder)
+			folder = new(Node)
+			folder.kind = "folder"
 			folder.title = depth1.Title
-			folder.children = make([]*Feed, len(depth1.Outline))
+			folder.children = make([]*Node, len(depth1.Outline))
 			for j, depth2 = range depth1.Outline {
-				feed = new(Feed)
+				feed = new(Node)
+				feed.kind = "feed"
 				feed.title = depth2.Title
 				feed.xmlURL = depth2.XMLURL
 				feed.htmlURL = depth2.HTMLURL
@@ -866,7 +870,8 @@ func (this *DAO) getTreeFromXML(c appengine.Context, xmldata []byte) []interface
 			}
 			tree[i] = folder
 		} else {
-			feed = new(Feed)
+			feed = new(Node)
+			feed.kind = "feed"
 			feed.title = depth1.Title
 			feed.xmlURL = depth1.XMLURL
 			feed.htmlURL = depth1.HTMLURL

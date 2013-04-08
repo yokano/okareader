@@ -1,7 +1,7 @@
 /**
  * ブラウザやAjaxのリクエストを適切な処理へ振り分ける
  * 直接データストアへアクセスしたり画面を描画したりしてはいけない
- * データストアへのアクセスはModelに,画面の描画はViewに頼むこと.
+ * データストアへのアクセスはDAOに,画面の描画はViewに頼むこと.
  */
 
 package okareader
@@ -13,7 +13,6 @@ import(
 	"encoding/json"
 	"mime/multipart"
 	"fmt"
-	"log"
 )
 
 type Controller struct {
@@ -485,12 +484,12 @@ func (this *Controller) importXML(w http.ResponseWriter, r *http.Request) {
 	var fileHeader *multipart.FileHeader
 	var xml []byte
 	var dao *DAO
-	var folderKey string
+//	var folderKey string
 	var view *View
-	var tree []interface{}
+	var tree []*Node
 	
 	c = appengine.NewContext(r)
-	folderKey = r.FormValue("key")
+//	folderKey = r.FormValue("key")
 	file, fileHeader, err = r.FormFile("xml")
 	check(c, err)
 	
@@ -501,12 +500,7 @@ func (this *Controller) importXML(w http.ResponseWriter, r *http.Request) {
 		
 		dao = new(DAO)
 		tree = dao.getTreeFromXML(c, xml)
-		log.Printf("#############################")
-		log.Printf("TREE: %#v", tree)
-		log.Printf("#############################")
-		dao.importXML(c, xml, folderKey)
-		
 		view = new(View)
-		view.showFolder(c, folderKey, w)
+		view.confirmImporting(c, w, tree)
 	}
 }

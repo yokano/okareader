@@ -6,6 +6,7 @@ import (
 	"appengine"
 	"appengine/urlfetch"
 	"net/http"
+	"strings"
 )
 
 /**
@@ -84,5 +85,22 @@ func prepend(dst []string, src []string) []string {
 	result = append(result, src...)
 	result = append(result, dst...)
 	
+	return result
+}
+
+/**
+ * 文字列を結合する
+ * @function
+ * @param {string} str 結合する文字列の配列
+ * @param {string} 結合した文字列
+ */
+func join(str ...string) string {
+	var result string
+	var i int
+	
+	result = str[0]
+	for i = 1; i < len(str); i++ {
+		result = strings.Join([]string{result, str[i]}, "")
+	}
 	return result
 }
