@@ -13,6 +13,7 @@ import(
 	"encoding/json"
 	"mime/multipart"
 	"fmt"
+	"log"
 )
 
 type Controller struct {
@@ -99,6 +100,11 @@ func (this *Controller) handle() {
 	
 	// XMLのアップロード
 	http.HandleFunc("/uploadxml", func(w http.ResponseWriter, r *http.Request) {
+		this.uploadXML(w, r)
+	})
+	
+	// XMLのインポート
+	http.HandleFunc("/api/importxml", func(w http.ResponseWriter, r *http.Request) {
 		this.importXML(w, r)
 	})
 	
@@ -477,19 +483,19 @@ func (this *Controller) updateFolder(w http.ResponseWriter, r *http.Request) {
  * @param {*http.Request} r リクエスト
  * @param {HTTP GET} key 追加先のフォルダのキー
  */
-func (this *Controller) importXML(w http.ResponseWriter, r *http.Request) {
+func (this *Controller) uploadXML(w http.ResponseWriter, r *http.Request) {
 	var c appengine.Context
 	var err error
 	var file multipart.File
 	var fileHeader *multipart.FileHeader
 	var xml []byte
 	var dao *DAO
-//	var folderKey string
+	var folderKey string
 	var view *View
 	var tree []*Node
 	
 	c = appengine.NewContext(r)
-//	folderKey = r.FormValue("key")
+	folderKey = r.FormValue("key")
 	file, fileHeader, err = r.FormFile("xml")
 	check(c, err)
 	
@@ -499,8 +505,45 @@ func (this *Controller) importXML(w http.ResponseWriter, r *http.Request) {
 		check(c, err)
 		
 		dao = new(DAO)
+		dao.saveXML(c, xml)
 		tree = dao.getTreeFromXML(c, xml)
 		view = new(View)
-		view.confirmImporting(c, w, tree)
+		view.confirmImporting(c, w, tree, folderKey)
 	}
+}
+
+/**
+ * XMLファイルのフォルダ・フィードをデータストアにインポートする
+ * @methodOf Controller
+ * @param 
+ */
+func (this *Controller) importXML(w http.ResponseWriter, r *http.Request) {
+	var folderKey string
+	var xml []byte
+	var dao *DAO
+	var c appengine.Context
+	var tree []*Node
+	var view *View
+	var ch chan map[string]interface{}
+	var result map[string]interface{}
+	
+	c = appengine.NewContext(r)
+	dao = new(DAO)
+	view = new(View)
+	ch = make(chan map[string]interface{})
+	folderKey = r.FormValue("key")
+	result = make(map[string]interface{})
+	
+	xml = dao.loadXML(c)
+	tree = dao.getTreeFromXML(c, xml)
+	
+	go dao.importXML(c, tree, folderKey, ch)
+	for {
+		result = <- ch
+		if(result["title"] == "import_completed") {
+			break
+		}
+		log.Printf("完了：%s", result["title"])
+	}
+	view.showFolder(c, folderKey, w)
 }

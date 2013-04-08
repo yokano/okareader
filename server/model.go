@@ -8,7 +8,6 @@ import (
 	"appengine/datastore"
 	"appengine/user"
 	"encoding/xml"
-	"log"
 )
 
 type DAO struct {
@@ -888,62 +887,56 @@ func (this *DAO) getTreeFromXML(c appengine.Context, xmldata []byte) []*Node {
  * @param {appengine.Context} c コンテキスト
  * @param {[]byte} xmldate XMLファイル
  * @param {string} folderKey 追加先のフォルダのキー
+ * @param {chan string} ch 登録状況をコントローラへ報告するためのチャネル
  */
-func (this *DAO) importXML(c appengine.Context, xmldata []byte, folderKey string) {
-	type OUTLINE struct {
-		Outline []OUTLINE `xml:"outline"`
-		Title string `xml:"title,attr"`
-		XMLURL string `xml:"xmlUrl,attr"`
-		HTMLURL string `xml:"htmlUrl,attr"`
-	}
-	type OPML struct {
-		Outline []OUTLINE `xml:"body>outline"`
-	}
-	var opml *OPML
-	var err error
+func (this *DAO) importXML(c appengine.Context, tree []*Node, folderKey string, ch chan map[string]interface{}) {
 	var feed *Feed
-	var depth1 OUTLINE
-	var depth2 OUTLINE
 	var u *user.User
 	var parentKey string
 	var entries []*Entry
 	var duplicated bool
+	var depth1 *Node
+	var depth2 *Node
+	var result map[string]interface{}
 	
 	u = user.Current(c)
+	result = make(map[string]interface{})
 	
-	opml = new(OPML)
-	err = xml.Unmarshal(xmldata, opml)
-	check(c, err)
-	
-	for _, depth1 = range opml.Outline {
-		if depth1.XMLURL == "" {
-			// フォルダ
-			parentKey = this.registerFolder(c, u, depth1.Title, false, folderKey)
-			log.Printf("%s", depth1.Title)
-			for _, depth2 = range depth1.Outline {
+	for _, depth1 = range tree {
+		result["title"] = depth1.title
+		if depth1.kind == "folder" {
+			parentKey = this.registerFolder(c, u, depth1.title, false, folderKey)
+			result["success"] = true
+			ch <- result
+			for _, depth2 = range depth1.children {
+				result["title"] = depth2.title
 				feed = new(Feed)
 				entries = make([]*Entry, 0)
-				feed, entries = this.getFeedFromXML(c, depth2.XMLURL)
+				feed, entries = this.getFeedFromXML(c, depth2.xmlURL)
 				_, duplicated = this.registerFeed(c, feed, entries, parentKey)
 				if duplicated {
-					log.Printf("    失敗：%s", feed.Title)
+					result["success"] = false
 				} else {
-					log.Printf("    成功: %s", feed.Title)
+					result["success"] = true
 				}
+				ch <- result
 			}
 		} else {
-			// フィード
 			feed = new(Feed)
 			entries = make([]*Entry, 0)
-			feed, entries = this.getFeedFromXML(c, depth2.XMLURL)
+			feed, entries = this.getFeedFromXML(c, depth2.xmlURL)
 			_, duplicated = this.registerFeed(c, feed, entries, parentKey)
 			if duplicated {
-				log.Printf("失敗：%s", feed.Title)
+				result["success"] = false
 			} else {
-				log.Printf("成功: %s", feed.Title)
+				result["success"] = true
 			}
+			ch <- result
 		}
 	}
+	result["title"] = "import_completed"
+	result["success"] = true
+	ch <- result
 }
 
 /**
@@ -1015,4 +1008,52 @@ func (this *DAO) getType(c appengine.Context, bytes []byte) string {
 	}
 	
 	return result
+}
+
+/**
+ * XMLデータをデータストアに保存する
+ * @methodOf DAO
+ * @param {appengine.Context} c コンテキスト
+ * @param {[]byte} xml XMLデータ
+ */
+func (this *DAO) saveXML(c appengine.Context, xml []byte) {
+	var u *user.User
+	var key *datastore.Key
+	var err error
+	type Entity struct {
+		XML []byte
+	}
+	var entity *Entity
+	
+	u = user.Current(c)
+	key = datastore.NewKey(c, "xml", u.ID, 0, nil)
+	
+	entity = new(Entity)
+	entity.XML = xml
+	_, err = datastore.Put(c, key, entity)
+	check(c, err)
+}
+
+/**
+ * XMLデータをデータストアから取得する
+ * @methodOf DAO
+ * @param {appengine.Context} c コンテキスト
+ * @returns {[]byte} ロードしたXMLデータ
+ */
+func (this *DAO) loadXML(c appengine.Context) []byte {
+	var u *user.User
+	var key *datastore.Key
+	var err error
+	type Entity struct {
+		XML []byte
+	}
+	var entity *Entity
+	
+	u = user.Current(c)
+	key = datastore.NewKey(c, "xml", u.ID, 0, nil)
+	entity = new(Entity)
+	err = datastore.Get(c, key, entity)
+	check(c, err)
+	
+	return entity.XML
 }
