@@ -9,3 +9,6 @@ handlers:
   static_dir: client
 - url: /(.*)
   script: _go_app
+
+inbound_services:
+- channel_presence
