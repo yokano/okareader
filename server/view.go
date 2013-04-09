@@ -128,7 +128,7 @@ func (this *View) showLogin(c appengine.Context, w http.ResponseWriter) {
  * @param {string} folderKey 追加先のフォルダのキー
  * @param {string} token 進捗をクライアントへ送信するためのチャネルで使用するトークン
  */
-func (this *View) confirmImporting(c appengine.Context, w http.ResponseWriter, tree []*Node, folderKey string, token string) {
+func (this *View) confirmImporting(c appengine.Context, w http.ResponseWriter, tree []*Node, folderKey string) {
 	var t *text.Template
 	var err error
 	var contents map[string]string
@@ -152,11 +152,10 @@ func (this *View) confirmImporting(c appengine.Context, w http.ResponseWriter, t
 			html = join(html, `<li>`, node.title, `</li>`)
 		}
 	}
-
+	
 	contents = make(map[string]string, 1)
 	contents["tree"] = html
 	contents["folder_key"] = folderKey
-	contents["token"] = token
 	contents["LogoutURL"], err = user.LogoutURL(c, "/")
 	check(c, err)
 	t.Execute(w, contents)

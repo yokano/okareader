@@ -9,12 +9,10 @@ package okareader
 import(
 	"appengine"
 	"appengine/user"
-	"appengine/channel"
 	"net/http"
 	"encoding/json"
 	"mime/multipart"
 	"fmt"
-	"log"
 )
 
 type Controller struct {
@@ -494,11 +492,8 @@ func (this *Controller) uploadXML(w http.ResponseWriter, r *http.Request) {
 	var folderKey string
 	var view *View
 	var tree []*Node
-	var token string
-	var u *user.User
 	
 	c = appengine.NewContext(r)
-	u = user.Current(c)
 	folderKey = r.FormValue("key")
 	file, fileHeader, err = r.FormFile("xml")
 	check(c, err)
@@ -507,14 +502,12 @@ func (this *Controller) uploadXML(w http.ResponseWriter, r *http.Request) {
 		xml = make([]byte, r.ContentLength)
 		_, err = file.Read(xml)
 		check(c, err)
-
-		token, err = channel.Create(c, u.ID)
 		
 		dao = new(DAO)
 		dao.saveXML(c, xml)
 		tree = dao.getTreeFromXML(c, xml)
 		view = new(View)
-		view.confirmImporting(c, w, tree, folderKey, token)
+		view.confirmImporting(c, w, tree, folderKey)
 	}
 }
 
@@ -529,38 +522,15 @@ func (this *Controller) importXML(w http.ResponseWriter, r *http.Request) {
 	var dao *DAO
 	var c appengine.Context
 	var tree []*Node
-//	var view *View
-	var ch chan map[string]interface{}
-	var result map[string]interface{}
-	var u *user.User
-	var f func(chan map[string]interface{})
+	var view *View
 	
 	c = appengine.NewContext(r)
-	u = user.Current(c)
 	dao = new(DAO)
-//	view = new(View)
-	ch = make(chan map[string]interface{})
+	view = new(View)
 	folderKey = r.FormValue("key")
-	result = make(map[string]interface{})	
 	xml = dao.loadXML(c)
 	tree = dao.getTreeFromXML(c, xml)
 	
-	f = func(ch chan map[string]interface{}) {
-		for {
-			log.Printf("C:モデルからのメッセージを待ちます")
-			result = <- ch
-			log.Printf("C:モデルから %s を受信しました", result)
-			if(result["title"] == "import_completed") {
-				break
-			}
-			log.Printf("C:クライアントへメッセージを送信します")
-			channel.Send(c, u.ID, fmt.Sprintf("%s [%t]", result["title"], result["success"]))
-			log.Printf("C:クライアントへメッセージを送信しました")
-		}
-	}
-	
-	go dao.importXML(c, tree, folderKey, ch)
-	go f(ch)
-
-//	view.showFolder(c, folderKey, w)
+	dao.importXML(c, tree, folderKey)
+	view.showFolder(c, folderKey, w)
 }

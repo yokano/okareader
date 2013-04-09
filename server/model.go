@@ -888,9 +888,8 @@ func (this *DAO) getTreeFromXML(c appengine.Context, xmldata []byte) []*Node {
  * @param {appengine.Context} c コンテキスト
  * @param {[]byte} xmldate XMLファイル
  * @param {string} folderKey 追加先のフォルダのキー
- * @param {chan string} ch 登録状況をコントローラへ報告するためのチャネル
  */
-func (this *DAO) importXML(c appengine.Context, tree []*Node, folderKey string, ch chan map[string]interface{}) {
+func (this *DAO) importXML(c appengine.Context, tree []*Node, folderKey string) {
 	var feed *Feed
 	var u *user.User
 	var parentKey string
@@ -904,53 +903,39 @@ func (this *DAO) importXML(c appengine.Context, tree []*Node, folderKey string, 
 	result = make(map[string]interface{})
 	
 	for _, depth1 = range tree {
-		log.Printf("D:%s の追加を試みます", depth1.title)
 		result["title"] = depth1.title
 		if depth1.kind == "folder" {
 			parentKey = this.registerFolder(c, u, depth1.title, false, folderKey)
+			log.Printf("%s", depth1.title)
 			result["success"] = true
-			log.Printf("D:データストアへ登録しました　コントローラへメッセージを送信します")
-			ch <- result
-			log.Printf("D:コントローラへメッセージを送信しました")
 			for _, depth2 = range depth1.children {
-				log.Printf("D:%s の子供を追加します", depth1.title)
 				result["title"] = depth2.title
 				feed = new(Feed)
 				entries = make([]*Entry, 0)
 				feed, entries = this.getFeedFromXML(c, depth2.xmlURL)
-				log.Printf("D:%s を追加します", depth2.title)
 				_, duplicated = this.registerFeed(c, feed, entries, parentKey)
-				log.Printf("D:%s を追加しました")
 				if duplicated {
 					result["success"] = false
 				} else {
 					result["success"] = true
 				}
-				log.Printf("D:コントローラへメッセージを送信します")
-				ch <- result
-				log.Printf("D:コントローラへメッセージを送信しました")
+				log.Printf("    %s", depth2.title)
 			}
 		} else {
 			feed = new(Feed)
 			entries = make([]*Entry, 0)
 			feed, entries = this.getFeedFromXML(c, depth1.xmlURL)
-			log.Printf("D:%s をデータストアへ追加します", depth1.title)
 			_, duplicated = this.registerFeed(c, feed, entries, parentKey)
-			log.Printf("D:%s をデータストアへ追加しました", depth1.title)
 			if duplicated {
 				result["success"] = false
 			} else {
 				result["success"] = true
 			}
-			log.Printf("D:コントローラへメッセージを送信します")
-			ch <- result
-			log.Printf("D:コントローラへメッセージを送信しました")
+			log.Printf("%s", depth1.title)
 		}
-		log.Printf("D:次のアイテムへ移ります")
 	}
 	result["title"] = "import_completed"
 	result["success"] = true
-	ch <- result
 }
 
 /**

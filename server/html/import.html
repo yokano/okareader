@@ -9,17 +9,16 @@
 		<script type="text/javascript" src="/_ah/channel/jsapi"></script>
 		<script src="/client/folder.js"></script>
 		<script src="/client/feed.js"></script>
-		<script src="/client/import.js"></script>
 	</head>
 
 	<body>
-		<div class="confirm_page" data-role="page" token="{{.token}}" key="{{.folder_key}}">
+		<div class="confirm_page" data-role="page">
 			<div data-role="header">
 				<h1>確認画面</h1>
 				<a href="{{.LogoutURL}}" data-icon="delete" class="ui-btn-right">ログアウト</a>
 			</div>
 			<div data-role="content">
-				<p>以下のフィードを登録しますか？</p>
+				<p>以下のフィードを登録しますか？この処理には数分かかることがあります</p>
 				<ul>
 					{{.tree}}
 				</ul>
@@ -27,7 +26,7 @@
 			<div data-role="footer" data-position="fixed">
 				<div data-role="navbar">
 					<ul>
-						<li><a id="import_xml" href="#" data-icon="check">インポートする</a></li>
+						<li><a href="/api/importxml?key={{.folder_key}}" data-icon="check">インポートする</a></li>
 					</ul>
 				</div>
 			</div>
