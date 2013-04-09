@@ -198,6 +198,7 @@ $('.folder_page').live('pageinit', function() {
 	
 	// フォルダの既読化ボタン
 	$('#read').bind('tap', function() {
+		var loading_div = $('<div class="loading"></div>').appendTo(contents);
 		if(confirm('フォルダの中身をすべて既読化しますか？')) {
 			$.ajax('/api/readfolder', {
 				data: {
@@ -205,6 +206,7 @@ $('.folder_page').live('pageinit', function() {
 				},
 				success: function() {
 					$('.ui-li-count').remove();
+					loading_div.remove();
 				},
 				error: function() {
 					console.log('error');

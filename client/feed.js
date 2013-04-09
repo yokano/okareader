@@ -35,7 +35,7 @@ $('.feed_page').live('pageinit', function() {
 					$('#entries').empty();
 				}
 			});
-		}d
+		}
 	});
 	
 	// 更新ボタンをタップしたらフィードを更新

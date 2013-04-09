@@ -14,6 +14,30 @@
 	margin-left: -100px;
 }
 
+.folder_icon {
+	width: 24px;
+	height: 46px;
+	background-image: url("/client/folder.png");
+	background-repeat: no-repeat;
+	background-position: center;
+	position: absolute;
+	margin-left: 10px;
+}
+
+.feed_icon {
+	width: 17px;
+	height: 46px;
+	background-image: url("/client/feed.png");
+	background-repeat: no-repeat;
+	background-position: center;
+	position: absolute;
+	margin-left: 10px;
+}
+
+.item {
+	margin-left: 25px;
+}
+
 @-webkit-keyframes rotation {
 	0% {
 		-webkit-transform: rotate(0deg);
