@@ -245,6 +245,10 @@ func (this *DAO) getItem(c appengine.Context, encodedKey string) (string, interf
 		Type string
 		Id string
 		Count int
+		URL string
+		Standard string
+		Parent string
+		FinalEntry string
 	}
 	var item *Item
 	var itemType string
