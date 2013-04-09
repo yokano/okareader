@@ -215,6 +215,7 @@ $('.folder_page').live('pageinit', function() {
 	
 	// フォルダの更新ボタン
 	$('#reload').bind('tap', function() {
+		var loading_div = $('<div class="loading"></div>').appendTo(contents);
 		$.ajax('/api/updatefolder', {
 			data: {
 				key: folderKey
@@ -224,6 +225,7 @@ $('.folder_page').live('pageinit', function() {
 				for(var key in data) {
 					$('[key=' + key + ']').find('.ui-li-count').html(data[key]);
 				}
+				loading_div.remove();
 			},
 			error: function() {
 				console.log('error');

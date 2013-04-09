@@ -40,12 +40,14 @@ $('.feed_page').live('pageinit', function() {
 	
 	// 更新ボタンをタップしたらフィードを更新
 	$('#reload').bind('tap', function() {
+		var loading_div = $('<div class="loading"></div>').appendTo(contents);
 		$.ajax('/api/updatefeed', {
 			data: {
 				key: feedKey
 			},
 			dataType: 'json',
 			success: function(data) {
+				loading_div.remove();
 				var entries = $('#entries');
 				for(var i = data.length - 1; i >= 0; i++) {
 					var li = $('<li><a href="' + data[i].Link + '" id=' + data[i].Link + ' class="entry" target="_blank">' + data[i].Title + '</a></li>');

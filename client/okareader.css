@@ -1,0 +1,24 @@
+.loading {
+	width: 200px;
+	height: 200px;
+	background-image: url("/client/load.png");
+	background-repeat: no-repeat;
+	-webkit-animation-name: rotation;
+	-webkit-animation-duration: 3s;
+	-webkit-animation-iteration-count: infinite;
+	-webkit-animation-timing-function: linear;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	margin-top: -100px;
+	margin-left: -100px;
+}
+
+@-webkit-keyframes rotation {
+	0% {
+		-webkit-transform: rotate(0deg);
+	}
+	100% {
+		-webkit-transform: rotate(360deg);
+	}
+}
