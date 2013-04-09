@@ -8,7 +8,6 @@ import (
 	"appengine/datastore"
 	"appengine/user"
 	"encoding/xml"
-	"log"
 )
 
 type DAO struct {
@@ -894,48 +893,27 @@ func (this *DAO) importXML(c appengine.Context, tree []*Node, folderKey string) 
 	var u *user.User
 	var parentKey string
 	var entries []*Entry
-	var duplicated bool
 	var depth1 *Node
 	var depth2 *Node
-	var result map[string]interface{}
 	
 	u = user.Current(c)
-	result = make(map[string]interface{})
 	
 	for _, depth1 = range tree {
-		result["title"] = depth1.title
 		if depth1.kind == "folder" {
 			parentKey = this.registerFolder(c, u, depth1.title, false, folderKey)
-			log.Printf("%s", depth1.title)
-			result["success"] = true
 			for _, depth2 = range depth1.children {
-				result["title"] = depth2.title
 				feed = new(Feed)
 				entries = make([]*Entry, 0)
 				feed, entries = this.getFeedFromXML(c, depth2.xmlURL)
-				_, duplicated = this.registerFeed(c, feed, entries, parentKey)
-				if duplicated {
-					result["success"] = false
-				} else {
-					result["success"] = true
-				}
-				log.Printf("    %s", depth2.title)
+				this.registerFeed(c, feed, entries, parentKey)
 			}
 		} else {
 			feed = new(Feed)
 			entries = make([]*Entry, 0)
 			feed, entries = this.getFeedFromXML(c, depth1.xmlURL)
-			_, duplicated = this.registerFeed(c, feed, entries, parentKey)
-			if duplicated {
-				result["success"] = false
-			} else {
-				result["success"] = true
-			}
-			log.Printf("%s", depth1.title)
+			this.registerFeed(c, feed, entries, parentKey)
 		}
 	}
-	result["title"] = "import_completed"
-	result["success"] = true
 }
 
 /**
