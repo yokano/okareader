@@ -1,0 +1,4 @@
+cron:
+- description: update all root folder
+  url: /task/update
+  schedule: every 24 hours

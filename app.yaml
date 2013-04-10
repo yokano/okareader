@@ -7,6 +7,9 @@ api_version: go1
 handlers:
 - url: /client
   static_dir: client
+- url: /task/update
+  static_dir: _go_app
+  login: admin
 - url: /(.*)
   script: _go_app
 

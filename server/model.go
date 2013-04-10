@@ -8,6 +8,7 @@ import (
 	"appengine/datastore"
 	"appengine/user"
 	"encoding/xml"
+	"log"
 )
 
 type DAO struct {
@@ -797,7 +798,7 @@ func (this *DAO) updateFeed(c appengine.Context, encodedFeedKey string) []*Entry
  * フォルダの更新
  * @methodOf DAO
  * @param {appengine.Context} c コンテキスト
- * @param {string} encodedFolderKey フォルダのキー
+ * @param {string} FolderKey フォルダのキー
  * @returns {map[string]int} 更新後の各フォルダ、フィードのエントリ件数
  */
 func (this *DAO) updateFolder(c appengine.Context, folderKey string) map[string]int {
@@ -1037,4 +1038,29 @@ func (this *DAO) loadXML(c appengine.Context) []byte {
 	check(c, err)
 	
 	return entity.XML
+}
+
+/**
+ * すべてのフォルダをアップデートする
+ * @methodOf DAO
+ * @param {appengine.Context} c コンテキスト
+ */
+func (this *DAO) updateAll(c appengine.Context) {
+	var query *datastore.Query
+	var iterator *datastore.Iterator
+	var key *datastore.Key
+	var err error
+	var count int
+	var i int
+	
+	query = datastore.NewQuery("folder").Filter("Type =", "root").KeysOnly()
+	count, err = query.Count(c)
+	check(c, err)
+	iterator = query.Run(c)
+	for i = 0; i < count; i++ {
+		key, err = iterator.Next(nil)
+		check(c, err)
+		this.updateFolder(c, key.Encode())
+	}
+	log.Printf("update all folder")
 }

@@ -91,7 +91,7 @@ func prepend(dst []string, src []string) []string {
 /**
  * 文字列を結合する
  * @function
- * @param {string} str 結合する文字列の配列
+ * @param {string} str 結合する文字列(可変個)
  * @param {string} 結合した文字列
  */
 func join(str ...string) string {

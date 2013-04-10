@@ -111,6 +111,11 @@ func (this *Controller) handle() {
 	http.HandleFunc("/clear", func(w http.ResponseWriter, r *http.Request) {
 		this.clear(w, r)
 	})
+	
+	// すべてのフォルダのアップデート(1日1回自動)
+	http.HandleFunc("/task/update", func(w http.ResponseWriter, r *http.Request) {
+		this.updateAll(w, r)
+	})
 }
 
 /**
@@ -514,7 +519,8 @@ func (this *Controller) uploadXML(w http.ResponseWriter, r *http.Request) {
 /**
  * XMLファイルのフォルダ・フィードをデータストアにインポートする
  * @methodOf Controller
- * @param 
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
  */
 func (this *Controller) importXML(w http.ResponseWriter, r *http.Request) {
 	var folderKey string
@@ -533,4 +539,20 @@ func (this *Controller) importXML(w http.ResponseWriter, r *http.Request) {
 	
 	dao.importXML(c, tree, folderKey)
 	view.showFolder(c, folderKey, w)
+}
+
+/**
+ * すべてのフォルダを一斉に更新する
+ * cronによって1日1回定期的に実行する
+ * アプリにアクセスしないことによって抜けてしまうエントリがでないようにするため
+ * @methodOf Controller
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ */
+func (this *Controller) updateAll(w http.ResponseWriter, r *http.Request) {
+	var c appengine.Context
+	var dao *DAO
+	c = appengine.NewContext(r)
+	dao = new(DAO)
+	dao.updateAll(c)
 }
