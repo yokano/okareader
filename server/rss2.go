@@ -9,6 +9,10 @@ import(
 	"encoding/xml"
 )
 
+/**
+ * RSS2.0
+ * @class
+ */
 type RSS2 struct {
 
 }

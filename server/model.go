@@ -11,6 +11,11 @@ import (
 	"log"
 )
 
+/**
+ * MVCでいうModelの役割
+ * データ操作全般
+ * @class
+ */
 type DAO struct {
 }
 
@@ -68,7 +73,14 @@ type Entry struct {
 }
 
 /**
- * XMLインポート時のフォルダツリーで使用する
+ * XMLインポート用
+ * フォルダまたはフィードを表す
+ * @class
+ * @member {string} kind "folder" または "feed"
+ * @member {string} title フォルダ、フィードのタイトル
+ * @member {string} children 包含するノードリスト
+ * @member {string} xmlURL 配信URL(フィードのみ)
+ * @member {string} htmlURL ウェブサイトのURL(フィードのみ)
  */
 type Node struct {
 	kind string
@@ -80,8 +92,9 @@ type Node struct {
 
 /**
  * フォルダの新規登録
- * @param c {Context} コンテクスト
- * @param u {User} ユーザ
+ * @methofOf DAO
+ * @param c {appengine.Context} コンテクスト
+ * @param u {*user.User} ユーザ
  * @param title {string} フォルダ名
  * @param root {bool} ルートフォルダならtrue
  * @param encodedParentKey {string} 追加先の親フォルダのキー
@@ -139,7 +152,9 @@ func (this *DAO) registerFolder(c appengine.Context, u *user.User, title string,
  * フォルダの削除
  * 中身も全て削除する
  * rootフォルダは削除不可
- * @param encodedKey {string} 削除するフォルダのキーをエンコードした文字列
+ * @methodOf DAO
+ * @param {appengine.Context} c コンテキスト
+ * @param {string} encodedKey 削除するフォルダのキーをエンコードした文字列
  */
 func (this *DAO) removeFolder(c appengine.Context, encodedKey string) {
 	var err error
@@ -184,6 +199,7 @@ func (this *DAO) removeFolder(c appengine.Context, encodedKey string) {
 
 /**
  * フォルダの取得
+ * @methodOf DAO
  * @param {appengine.Context} c コンテキスト
  * @param {string} encodedKey 取得したいフォルダのキーをエンコードした文字列
  */
@@ -341,6 +357,8 @@ func (this *DAO) getRootFolder(c appengine.Context, u *user.User) (string, *Fold
 
 /**
  * フォルダの中身を取得する
+ * @methodOf DAO
+ * @param {appengine.Context} c コンテキスト
  * @param {*Folder} folder 親フォルダ
  * @returns {[]interface{}} フォルダの中身を配列化したもの
  */
@@ -528,7 +546,7 @@ func (this *DAO) readFolder(c appengine.Context, encodedKey string) {
  * フィードの既読化
  * @methodOf DAO
  * @param {appengine.Context} c コンテキスト
- * @param {string} フィードのキー
+ * @param {string} encodedKey フィードのキー
  */
 func (this *DAO) readFeed(c appengine.Context, encodedKey string) {
 	var entries []*Entry
@@ -652,6 +670,7 @@ func (this *DAO) removeEntry(c appengine.Context, id string, feedKey string) {
 
 /**
  * フィードをデータストアから読み出す
+ * @methodOf DAO
  * @param {appengine.Context} c コンテキスト
  * @param {string} feedKey エンコード済みのフィードキー
  * @retruns {*Feed} フィード
@@ -963,6 +982,7 @@ func (this *DAO) getFeedFromXML(c appengine.Context, url string) (*Feed, []*Entr
 /**
  * XMLデータの規格を判断する
  * @methodOf DAO
+ * @param {appengine.Context} c コンテキスト
  * @param {[]byte} bytes XMLデータ
  * @returns {string} フィードの規格(RSS1.0 / RSS2.0 / Atom / etc)
  */

@@ -7,6 +7,10 @@ import (
 	"encoding/xml"
 )
 
+/**
+ * RSS1.0
+ * @class
+ */
 type RSS1 struct {
 
 }

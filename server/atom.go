@@ -7,14 +7,20 @@ import (
 	"encoding/xml"
 )
 
+/**
+ * Atomファイルの操作
+ * @class
+ */
 type Atom struct {
 }
 
 /**
  * データストアに保存できる形式に変換する
- * @methodOf AtomTemplate
- * @returns entries {[]Entry} 変換後のエントリ
- * @returns feed {Feed} 変換後のFeed
+ * @methodOf Atom
+ * @param {appengine.Context} c コンテキスト
+ * @param {[]byte} xmldata
+ * @returns {Feed} feed フィードリスト
+ * @returns {[]Entry} entries エントリリスト
  */
 func (this *Atom) encode(c appengine.Context, xmldata []byte) (*Feed, []*Entry) {
 	type EntryTemplate struct {

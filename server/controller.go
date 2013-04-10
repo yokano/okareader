@@ -15,10 +15,14 @@ import(
 	"fmt"
 )
 
+/**
+ * サーバへのリクエストをModelやViewに振り分ける
+ * @class
+ */
 type Controller struct {
 }
 
-/*
+/**
  * リクエストによる処理の振り分け
  * http://okareader.appspot.com/ 以下のURLに対して処理を割り当てる
  * /api/*** はAjaxによるAPIへのアクセスであり画面の描画は不用
@@ -157,7 +161,6 @@ func (this *Controller) home(w http.ResponseWriter, r *http.Request) {
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
  * @param {HTTP GET} key エンコード済みのフォルダキー
- * @param {HTTP GET} from 遷移前のフォルダのキー
  */
 func (this *Controller) folder(w http.ResponseWriter, r *http.Request) {
 	var c appengine.Context
@@ -178,7 +181,6 @@ func (this *Controller) folder(w http.ResponseWriter, r *http.Request) {
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
  * @param {HTTP GET} key エンコード済みのフィードキー
- * @param {HTTP GET} from 遷移前のフォルダのキー
  */
 func (this *Controller) feed(w http.ResponseWriter, r *http.Request) {
 	var c appengine.Context
@@ -197,7 +199,9 @@ func (this *Controller) feed(w http.ResponseWriter, r *http.Request) {
  * @methodOf Controller
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r HTTPリクエスト
- * @returns {AJAX:JSON} 追加したフォルダのキーを含むJSON
+ * @param {HTTP GET} folder_name 追加するフォルダ名
+ * @param {HTTP GET} folder_key 追加先のフォルダキー
+ * @returns {AJAX JSON} 追加したフォルダのキーを含むJSON
  */
 func (this *Controller) addFolder(w http.ResponseWriter, r *http.Request) {
 	var c appengine.Context
@@ -283,6 +287,16 @@ func (this *Controller) removeFolder(w http.ResponseWriter, r *http.Request) {
  * @methodOf Controller
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
+ * @param {HTTP GET} url フィードファイルの場所
+ * @param {HTTP GET} folder_key 追加先のフォルダキー
+ * @returns {AJAX JSON} JSONオブジェクト
+ *     "result"
+ *         "nothing_file" 指定されたURLに配信用ファイルが存在しない
+ *         "duplicated" 既に同じフィードが存在する
+ *         "success" 登録成功
+ *     "key" 追加したフィードのキー
+ *     "name" 追加したフィードのタイトル
+ *     "count" 追加したフィード内のエントリ数
  */
 func (this *Controller) addFeed(w http.ResponseWriter, r *http.Request) {
 	var url string
@@ -358,6 +372,10 @@ func (this *Controller) removeFeed(w http.ResponseWriter, r *http.Request) {
 /**
  * エントリを既読化（削除）する
  * @methodOf Controller
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ * @param {HTTP GET} id 既読化するエントリのID
+ * @param {HTTP GET} feed_key エントリが含まれるフィードキー
  */
 func (this *Controller) readEntry(w http.ResponseWriter, r *http.Request) {
 	var c appengine.Context
@@ -376,6 +394,9 @@ func (this *Controller) readEntry(w http.ResponseWriter, r *http.Request) {
 /**
  * フィード内のエントリをすべて既読する
  * @methodOf Controller
+ * @param {http.ResponseWriter} w 応答先
+ * @param {*http.Request} r リクエスト
+ * @param {HTTP GET} key 既読化するフィードのキー
  */
 func (this *Controller) readAll(w http.ResponseWriter, r *http.Request) {
 	var encodedFeedKey string
@@ -431,7 +452,7 @@ func (this *Controller) clear(w http.ResponseWriter, r *http.Request) {
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
  * @param {HTTP GET} key フィードキー
- * @returns {JSON} 追加したエントリリストをクライアントへ返す
+ * @returns {AJAX JSON} 追加したエントリリスト
  */
 func (this *Controller) updateFeed(w http.ResponseWriter, r *http.Request) {
 	var key string
@@ -459,7 +480,7 @@ func (this *Controller) updateFeed(w http.ResponseWriter, r *http.Request) {
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
  * @param {HTTP GET} key フォルダのキー
- * @returns {JSON} フォルダの直下の各アイテムの更新件数
+ * @returns {AJAX JSON} フォルダの直下の各アイテムの更新件数
  */
 func (this *Controller) updateFolder(w http.ResponseWriter, r *http.Request) {
 	var key string
@@ -488,6 +509,7 @@ func (this *Controller) updateFolder(w http.ResponseWriter, r *http.Request) {
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
  * @param {HTTP GET} key 追加先のフォルダのキー
+ * @param {HTTP GET} xml XMLファイル
  */
 func (this *Controller) uploadXML(w http.ResponseWriter, r *http.Request) {
 	var c appengine.Context
@@ -528,6 +550,7 @@ func (this *Controller) uploadXML(w http.ResponseWriter, r *http.Request) {
  * @methodOf Controller
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
+ * @param {HTTP GET} key インポート先のフォルダキー
  */
 func (this *Controller) importXML(w http.ResponseWriter, r *http.Request) {
 	var folderKey string

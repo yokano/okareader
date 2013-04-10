@@ -15,6 +15,7 @@ import (
 
 /**
  * ページの表示関係を行うオブジェクト
+ * @class
  */
 type View struct {
 }
@@ -104,6 +105,8 @@ func (this *View) showFeed(c appengine.Context, feedKey string, w http.ResponseW
 /**
  * ログインを促す画面を表示
  * @methodOf View
+ * @param {appengine.Context} c コンテキスト
+ * @param {http.RespnoseWriter} w 応答先
  */
 func (this *View) showLogin(c appengine.Context, w http.ResponseWriter) {
 	var contents map[string]interface{}
