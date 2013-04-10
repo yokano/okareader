@@ -27,7 +27,7 @@ $('.folder_page').live('pageinit', function() {
 			},
 			dataType: 'json',
 			success: function(data) {
-				contents.append($('<li><a href="/folder?key=' + data.key + '" key="' + data.key + '" type="folder">' + name + '</a></li>')).listview('refresh');
+				contents.append($('<li><div class="folder_icon"></div><a class="item" href="/folder?key=' + data.key + '" key="' + data.key + '" type="folder">' + name + '</a></li>')).listview('refresh');
 				addFolder.popup('close');
 				folderName.val('');
 			},
@@ -51,7 +51,7 @@ $('.folder_page').live('pageinit', function() {
 				if(data.duplicated) {
 					alert('既に登録済みのフィードです')
 				} else {
-					contents.append($('<li><a href="/feed?key=' + data.key + '"  key="' + data.key + '" type="feed"><span class="title">' + data.name + '</span><span class="ui-li-count">' + data.count + '</span></a></li>')).listview('refresh');
+					contents.append($('<li><div class="feed_icon"></div><a class="item" href="/feed?key=' + data.key + '"  key="' + data.key + '" type="feed"><span class="title">' + data.name + '</span><span class="ui-li-count">' + data.count + '</span></a></li>')).listview('refresh');
 				}
 				addFeed.popup('close');
 				feedURL.val('');
