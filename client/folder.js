@@ -41,25 +41,31 @@ $('.folder_page').live('pageinit', function() {
 	addFeedButton.bind('tap', function() {
 		var url = feedURL.val();
 		
-		$.ajax('/api/addfeed', {
-			data: {
-				url: url,
-				folder_key: folderKey
-			},
-			dataType: 'json',
-			success: function(data) {
-				if(data.duplicated) {
-					alert('既に登録済みのフィードです')
-				} else {
-					contents.append($('<li><div class="feed_icon"></div><a class="item" href="/feed?key=' + data.key + '"  key="' + data.key + '" type="feed"><span class="title">' + data.name + '</span><span class="ui-li-count">' + data.count + '</span></a></li>')).listview('refresh');
+		if(!url.match(/http:\/\/.+/)) {
+			alert('HTTPのURLを入力してください');
+		} else {
+			$.ajax('/api/addfeed', {
+				data: {
+					url: url,
+					folder_key: folderKey
+				},
+				dataType: 'json',
+				success: function(data) {
+					if(data.duplicated) {
+						alert('既に登録済みのフィードです')
+					} else {
+						contents.append($('<li><div class="feed_icon"></div><a class="item" href="/feed?key=' + data.key + '"  key="' + data.key + '" type="feed"><span class="title">' + data.name + '</span><span class="ui-li-count">' + data.count + '</span></a></li>')).listview('refresh');
+					}
+					addFeed.popup('close');
+					feedURL.val('');
+				},
+				error: function() {
+					console.log('error');
 				}
-				addFeed.popup('close');
-				feedURL.val('');
-			},
-			error: function() {
-				console.log('error');
-			}
-		});
+			});
+		}
+		
+		feedURL.val('');
 	});
 	
 	// 編集ボタン
