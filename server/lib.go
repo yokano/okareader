@@ -7,6 +7,7 @@ import (
 	"appengine/urlfetch"
 	"net/http"
 	"strings"
+	"log"
 )
 
 /**
@@ -53,7 +54,7 @@ func removeItem(s []string, target string) []string {
  * @function
  * @param {appengine.Context} c コンテキスト
  * @param {string} url URL
- * @returns {[]byte} 受信したXMLデータ
+ * @returns {[]byte} 受信したXMLデータ、取得できなかったら nil を返す
  */
 func getXML(c appengine.Context, url string) []byte {
 	var client *http.Client
@@ -64,10 +65,14 @@ func getXML(c appengine.Context, url string) []byte {
 	client = urlfetch.Client(c)
 	response, err = client.Get(url)
 	check(c, err)
-	
-	result = make([]byte, response.ContentLength)
-	_, err = response.Body.Read(result)
-	check(c, err)
+	if err != nil {
+		log.Printf("URLからファイルを取得出来ませんでした")
+		result = nil
+	} else {
+		result = make([]byte, response.ContentLength)
+		_, err = response.Body.Read(result)
+		check(c, err)
+	}
 	
 	return result
 }

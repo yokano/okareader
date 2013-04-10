@@ -322,15 +322,17 @@ func (this *Controller) addFeed(w http.ResponseWriter, r *http.Request) {
 			rss1 = new(RSS1)
 			feed, entries = rss1.encode(c, xml)
 		case "etc":
+			fmt.Fprintf(w, `{"result":"nothing_file"}`)
+			return
 	}
 	feed.URL = url
 	
 	// フィード追加を試みる
 	feedKey, duplicated = dao.registerFeed(c, feed, entries, folderKey)
 	if duplicated {
-		fmt.Fprintf(w, `{"duplicated":true}`)
+		fmt.Fprintf(w, `{"result":"duplicated"}`)
 	} else {
-		fmt.Fprintf(w, `{"duplicated":false, "key":"%s", "name":"%s", "count":%d}`, feedKey, feed.Title, len(entries))
+		fmt.Fprintf(w, `{"result":"success", "key":"%s", "name":"%s", "count":%d}`, feedKey, feed.Title, len(entries))
 	}
 }
 

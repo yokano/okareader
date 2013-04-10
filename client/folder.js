@@ -51,7 +51,9 @@ $('.folder_page').live('pageinit', function() {
 				},
 				dataType: 'json',
 				success: function(data) {
-					if(data.duplicated) {
+					if(data.result == 'nothing_file') {
+						alert('指定されたURLに配信用のファイルが見つかりませんでした。Atom, RSS2.0, RSS1.0 に対応したファイルの場所を指定してください。');
+					} else if(data.result == 'duplicated') {
 						alert('既に登録済みのフィードです')
 					} else {
 						contents.append($('<li><div class="feed_icon"></div><a class="item" href="/feed?key=' + data.key + '"  key="' + data.key + '" type="feed"><span class="title">' + data.name + '</span><span class="ui-li-count">' + data.count + '</span></a></li>')).listview('refresh');
