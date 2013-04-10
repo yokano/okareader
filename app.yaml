@@ -12,6 +12,3 @@ handlers:
   login: admin
 - url: /(.*)
   script: _go_app
-
-inbound_services:
-- channel_presence
