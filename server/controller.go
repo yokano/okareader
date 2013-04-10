@@ -499,11 +499,14 @@ func (this *Controller) uploadXML(w http.ResponseWriter, r *http.Request) {
 	var tree []*Node
 	
 	c = appengine.NewContext(r)
+	view = new(View)
 	folderKey = r.FormValue("key")
 	file, fileHeader, err = r.FormFile("xml")
 	check(c, err)
-	
-	if fileHeader.Header.Get("Content-Type") == "text/xml" {
+	if err != nil {
+		// ファイルがアップロードされていない
+		view.showFolder(c, folderKey, w)
+	} else if fileHeader.Header.Get("Content-Type") == "text/xml" {
 		xml = make([]byte, r.ContentLength)
 		_, err = file.Read(xml)
 		check(c, err)
@@ -511,8 +514,10 @@ func (this *Controller) uploadXML(w http.ResponseWriter, r *http.Request) {
 		dao = new(DAO)
 		dao.saveXML(c, xml)
 		tree = dao.getTreeFromXML(c, xml)
-		view = new(View)
 		view.confirmImporting(c, w, tree, folderKey)
+	} else {
+		// XMLファイルではない
+		view.showFolder(c, folderKey, w)
 	}
 }
 

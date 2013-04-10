@@ -234,4 +234,13 @@ $('.folder_page').live('pageinit', function() {
 			}
 		});
 	});
+	
+	// XMLアップロード時のチェック
+	$('#uploadxml').bind('tap', function() {
+		var filename = $('#xmlfile').val();
+		if(!filename.match(/\.xml$/)) {
+			alert('xmlファイルが選択されていません');
+			return false
+		}
+	});
 });

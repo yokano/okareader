@@ -72,9 +72,9 @@
 				<div data-role="popup" id="import_xml" data-theme="a" style="padding: 10px 20px;">
 					<form action="/uploadxml" method="POST" enctype="multipart/form-data" data-ajax="false">
 						<label>XMLファイルをアップロードしてください</label>
-						<input type="file" id="xml" name="xml"></input>
+						<input id="xmlfile" type="file" id="xml" name="xml"></input>
 						<input type="hidden" name="key" value="{{.FolderKey}}"></input>
-						<input type="submit" value="送信"></input>
+						<input id="uploadxml" type="submit" value="送信"></input>
 					</form>
 				</div>
 				
