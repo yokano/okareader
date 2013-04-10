@@ -89,18 +89,20 @@ $('.folder_page').live('pageinit', function() {
 			editMode = true;
 			$(this).find('.ui-btn-text').html('完了');
 			$(this).find('.ui-icon').removeClass('ui-icon-edit').addClass('ui-icon-check');
-	
+			
 			// リンクを無効化と編集ポップアップの表示
 			$.each(contents.children(), function(i, data) {
 				$(data).find('a').bind('tap', function() {
 					editTarget = $(this);
 
 					if(editTarget.attr('type') == 'feed') {
+						$('#feed_name').val($(this).find('.title').html());
 						$('#feed_menu').popup('open', {
 							transition: 'pop',
 							positionTo: 'window'
 						});
 					} else if(editTarget.attr('type') == 'folder') {
+						$('#folder_new_name').val($(this).find('.title').html());
 						$('#folder_menu').popup('open', {
 							transition: 'pop',
 							positionTo: 'window'
