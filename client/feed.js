@@ -24,15 +24,20 @@ $('.feed_page').live('pageinit', function() {
 	// 既読化ボタンをタップしたらすべて既読化
 	$('#read_all').bind('tap', function() {
 		if(window.confirm('すべてのエントリを既読化しますか？')) {
+			var loading_div = $('<div class="loading"></div>').appendTo(contents);
 			$.ajax('/api/readall', {
 				data: {
 					key: feedKey
 				},
+				async: false,
 				error: function() {
 					console.log('network error');
 				},
 				success: function() {
 					$('#entries').empty();
+				},
+				complete: function() {
+					loading_div.remove();
 				}
 			});
 		}
@@ -46,8 +51,8 @@ $('.feed_page').live('pageinit', function() {
 				key: feedKey
 			},
 			dataType: 'json',
+			async: false,
 			success: function(data) {
-				loading_div.remove();
 				var entries = $('#entries');
 				for(var i = data.length - 1; i >= 0; i++) {
 					var li = $('<li><a href="' + data[i].Link + '" id=' + data[i].Link + ' class="entry" target="_blank">' + data[i].Title + '</a></li>');
@@ -57,6 +62,9 @@ $('.feed_page').live('pageinit', function() {
 			},
 			error: function() {
 				console.log('error');
+			},
+			complete: function() {
+				loading_div.remove();
 			}
 		});
 	});

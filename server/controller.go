@@ -466,7 +466,7 @@ func (this *Controller) updateFeed(w http.ResponseWriter, r *http.Request) {
 	
 	c = appengine.NewContext(r)
 	dao = new(DAO)
-	newEntries = dao.updateFeed(c, key)
+	newEntries = dao.updateFeed(c, key, nil)
 	
 	result, err = json.Marshal(newEntries)
 	check(c, err)
@@ -495,7 +495,7 @@ func (this *Controller) updateFolder(w http.ResponseWriter, r *http.Request) {
 	c = appengine.NewContext(r)
 	
 	result = make(map[string]int)
-	result = dao.updateFolder(c, key)
+	result = dao.updateFolder(c, key, nil)
 	
 	response, err = json.Marshal(result)
 	check(c, err)

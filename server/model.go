@@ -749,9 +749,10 @@ func (this *DAO) clear(c appengine.Context) {
  * @methodOf DAO
  * @param {appengine.Context} c コンテキスト
  * @param {string} encodedFeedKey フィードのキー
+ * @param {chan bool} 処理が完了したことを報告するチャネル　フォルダ更新から呼び出された場合に使用する
  * @returns {[]*Entry} 追加したエントリ一覧
  */
-func (this *DAO) updateFeed(c appengine.Context, encodedFeedKey string) []*Entry {
+func (this *DAO) updateFeed(c appengine.Context, encodedFeedKey string, parentChannel chan bool) []*Entry {
 	var feed *Feed
 	var err error
 	var feedKey *datastore.Key
@@ -810,6 +811,10 @@ func (this *DAO) updateFeed(c appengine.Context, encodedFeedKey string) []*Entry
 	}
 	this.registerEntries(c, newEntries, encodedFeedKey)
 	
+	if parentChannel != nil {
+		parentChannel <- true
+	}
+	
 	return newEntries
 }
 
@@ -818,27 +823,50 @@ func (this *DAO) updateFeed(c appengine.Context, encodedFeedKey string) []*Entry
  * @methodOf DAO
  * @param {appengine.Context} c コンテキスト
  * @param {string} FolderKey フォルダのキー
+ * @param {chan bool} parentChannel アップデートが完了したことを報告するチャネル　マルチスレッドで使う
  * @returns {map[string]int} 更新後の各フォルダ、フィードのエントリ件数
  */
-func (this *DAO) updateFolder(c appengine.Context, folderKey string) map[string]int {
+func (this *DAO) updateFolder(c appengine.Context, folderKey string, parentChannel chan bool) map[string]int {
 	var folder *Folder
 	var childKey string
 	var childType string
 	var result map[string]int
 	var feed *Feed
+	var childrenChannel chan bool
+	var i int
 	
 	folder = this.getFolder(c, folderKey)
-	
-	result = make(map[string]int)
+		
+	// 新規エントリをマルチスレッドで一斉に取得・追加する
+	// 各URLフェッチに時間がかかるため
+	childrenChannel = make(chan bool)
 	for _, childKey = range folder.Children {
 		childType, _ = this.getItem(c, childKey)
 		if childType == "folder" {
-			this.updateFolder(c, childKey)
-			result[childKey] = this.getEntriesCount(c, childKey)
+			go this.updateFolder(c, childKey, childrenChannel)
 		} else if childType == "feed" {
-			this.updateFeed(c, childKey)
-			feed = this.getFeed(c, childKey)
-			result[childKey] = len(feed.Entries)
+			go this.updateFeed(c, childKey, childrenChannel)
+		}
+	}
+	
+	// すべてのスレッドが完了するまで待機
+	for i = 0; i < len(folder.Children); i++ {
+		<- childrenChannel
+	}
+	
+	// 呼び出し元直下のエントリの数をカウントして返す
+	result = make(map[string]int)
+	if parentChannel != nil {
+		parentChannel <- true
+	} else {
+		for _, childKey = range folder.Children {
+			childType, _ = this.getItem(c, childKey)
+			if childType == "folder" {
+				result[childKey] = this.getEntriesCount(c, childKey)
+			} else if childType == "feed" {
+				feed = this.getFeed(c, childKey)
+				result[childKey] = len(feed.Entries)
+			}
 		}
 	}
 	
@@ -1080,7 +1108,7 @@ func (this *DAO) updateAll(c appengine.Context) {
 	for i = 0; i < count; i++ {
 		key, err = iterator.Next(nil)
 		check(c, err)
-		this.updateFolder(c, key.Encode())
+		this.updateFolder(c, key.Encode(), nil)
 	}
 	log.Printf("update all folder")
 }

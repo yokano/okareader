@@ -208,18 +208,21 @@ $('.folder_page').live('pageinit', function() {
 	
 	// フォルダの既読化ボタン
 	$('#read').bind('tap', function() {
-		var loading_div = $('<div class="loading"></div>').appendTo(contents);
 		if(confirm('フォルダの中身をすべて既読化しますか？')) {
+			var loading_div = $('<div class="loading"></div>').appendTo(contents);
 			$.ajax('/api/readfolder', {
 				data: {
 					key: folderKey
 				},
+				async: false,
 				success: function() {
 					$('.ui-li-count').remove();
-					loading_div.remove();
 				},
 				error: function() {
 					console.log('error');
+				},
+				complete: function() {
+					loading_div.remove();
 				}
 			});
 		}
@@ -233,14 +236,17 @@ $('.folder_page').live('pageinit', function() {
 				key: folderKey
 			},
 			dataType: 'json',
+			async: false,
 			success: function(data) {
 				for(var key in data) {
 					$('[key=' + key + ']').find('.ui-li-count').html(data[key]);
 				}
-				loading_div.remove();
 			},
 			error: function() {
 				console.log('error');
+			},
+			complete: function() {
+				loading_div.remove();
 			}
 		});
 	});
