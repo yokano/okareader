@@ -132,7 +132,7 @@ $('.folder_page').live('pageinit', function() {
 	});
 	
 	// フィード名変更ボタン
-	$('#feed_name_button').bind('tap', function() {
+	$(this).find('#feed_name_button').bind('tap', function() {
 		var name = $('#feed_name').val();
 		var key = editTarget.attr('key');
 		$.ajax('/api/renamefeed', {
@@ -152,7 +152,7 @@ $('.folder_page').live('pageinit', function() {
 	});
 	
 	// フィード削除ボタン
-	$('#remove_feed').bind('tap', function() {
+	$(this).find('#remove_feed').bind('tap', function() {
 		var key = editTarget.attr('key');
 		$.ajax('/api/removefeed', {
 			data: {
@@ -169,7 +169,7 @@ $('.folder_page').live('pageinit', function() {
 	});
 	
 	// フォルダ名変更ボタン
-	$('#folder_name_button').bind('tap', function() {
+	$(this).find('#folder_name_button').bind('tap', function() {
 		var name = $('#folder_new_name').val();
 		var key = editTarget.attr('key');
 		
@@ -190,7 +190,7 @@ $('.folder_page').live('pageinit', function() {
 	});
 	
 	// フォルダ削除ボタン
-	$('#remove_folder').bind('tap', function() {
+	$(this).find('#remove_folder').bind('tap', function() {
 		var key = editTarget.attr('key');
 		$.ajax('/api/removefolder', {
 			data: {
@@ -207,7 +207,7 @@ $('.folder_page').live('pageinit', function() {
 	});
 	
 	// フォルダの既読化ボタン
-	$('#read').bind('tap', function() {
+	$(this).find('#read').bind('tap', function() {
 		if(confirm('フォルダの中身をすべて既読化しますか？')) {
 			var loading_div = $('<div class="loading"></div>').appendTo(contents);
 			$.ajax('/api/readfolder', {
@@ -229,7 +229,7 @@ $('.folder_page').live('pageinit', function() {
 	});
 	
 	// フォルダの更新ボタン
-	$('#reload').bind('tap', function() {
+	$(this).find('#reload').bind('tap', function() {
 		var loading_div = $('<div class="loading"></div>').appendTo(contents);
 		$.ajax('/api/updatefolder', {
 			data: {
@@ -252,7 +252,7 @@ $('.folder_page').live('pageinit', function() {
 	});
 	
 	// XMLアップロード時のチェック
-	$('#uploadxml').bind('tap', function() {
+	$(this).find('#uploadxml').bind('tap', function() {
 		var filename = $('#xmlfile').val();
 		if(!filename.match(/\.xml$/)) {
 			alert('xmlファイルが選択されていません');
