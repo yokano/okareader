@@ -24,7 +24,6 @@ type Atom struct {
  */
 func (this *Atom) encode(c appengine.Context, xmldata []byte) (*Feed, []*Entry) {
 	type EntryTemplate struct {
-		Id string `xml:"id"`
 		Link struct {
 			Href string `xml:"href,attr"`
 		} `xml:"link"`
@@ -58,7 +57,6 @@ func (this *Atom) encode(c appengine.Context, xmldata []byte) (*Feed, []*Entry) 
 	// エントリの変換
 	for _, entryTemplate = range atomTemplate.Entries {
 		entry = new(Entry)
-		entry.Id = entryTemplate.Id
 		entry.Link = entryTemplate.Link.Href
 		entry.Title = entryTemplate.Title
 		

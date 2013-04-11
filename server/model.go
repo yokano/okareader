@@ -66,7 +66,7 @@ type Feed struct {
  * @member {string} Owner 所有者のユーザID
  */
 type Entry struct {
-	Id string
+//	Id string
 	Link string
 	Title string
 	Owner string
@@ -554,7 +554,8 @@ func (this *DAO) readFeed(c appengine.Context, encodedKey string) {
 	
 	entries = this.getEntries(c, encodedKey)
 	for _, entry = range entries {
-		this.removeEntry(c, entry.Id, encodedKey)
+//		this.removeEntry(c, entry.Id, encodedKey)
+		this.removeEntry(c, entry.Link, encodedKey)
 	}
 }
 
@@ -640,10 +641,10 @@ func (this *DAO) getEntries(c appengine.Context, feedKey string) []*Entry {
  * 指定されたエントリを削除する
  * @methodOf DAO
  * @param {appengine.Context} c コンテキスト
- * @param {string} id 削除するエントリのID
+ * @param {string} link 削除するエントリのURL
  * @param {string} feedKey エントリが登録されているフィードのキー
  */
-func (this *DAO) removeEntry(c appengine.Context, id string, feedKey string) {
+func (this *DAO) removeEntry(c appengine.Context, link string, feedKey string) {
 	var query *datastore.Query
 	var iterator *datastore.Iterator
 	var key *datastore.Key
@@ -651,7 +652,7 @@ func (this *DAO) removeEntry(c appengine.Context, id string, feedKey string) {
 	var feed *Feed
 	var encodedEntryKey string
 	
-	query = datastore.NewQuery("entry").Filter("Id =", id)
+	query = datastore.NewQuery("entry").Filter("Link =", link)
 	iterator = query.Run(c)
 	key, err = iterator.Next(nil)
 	check(c, err)

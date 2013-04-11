@@ -57,7 +57,6 @@ func (this *RSS2) encode(c appengine.Context, xmldata []byte) (*Feed, []*Entry) 
 	entries = make([]*Entry, len(channel.Item))
 	for i, item = range channel.Item {
 		entries[i] = new(Entry)
-		entries[i].Id = item.Link
 		entries[i].Title = item.Title
 		entries[i].Link = item.Link
 	}

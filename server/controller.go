@@ -374,21 +374,21 @@ func (this *Controller) removeFeed(w http.ResponseWriter, r *http.Request) {
  * @methodOf Controller
  * @param {http.ResponseWriter} w 応答先
  * @param {*http.Request} r リクエスト
- * @param {HTTP GET} id 既読化するエントリのID
+ * @param {HTTP GET} link 既読化するエントリのURL
  * @param {HTTP GET} feed_key エントリが含まれるフィードキー
  */
 func (this *Controller) readEntry(w http.ResponseWriter, r *http.Request) {
 	var c appengine.Context
-	var entryId string
+	var link string
 	var feedKey string
 	var dao *DAO
 	
 	c = appengine.NewContext(r)
-	entryId = r.FormValue("id")
+	link = r.FormValue("link")
 	feedKey = r.FormValue("feed_key")
 	dao = new(DAO)
 	
-	dao.removeEntry(c, entryId, feedKey)
+	dao.removeEntry(c, link, feedKey)
 }
 
 /**

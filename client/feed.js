@@ -9,7 +9,7 @@ $('.feed_page').live('pageinit', function() {
 		var self = $(this);
 		$.ajax('/api/read', {
 			data: {
-				id: self.attr('id'),
+				link: self.attr('href'),
 				feed_key: feedKey
 			},
 			error: function() {
@@ -59,7 +59,7 @@ $('.feed_page').live('pageinit', function() {
 				}
 				var entries = $('#entries');
 				for(var i = data.length - 1; i >= 0; i--) {
-					var li = $('<li><a href="' + data[i].Link + '" id=' + data[i].Link + ' class="entry" target="_blank">' + data[i].Title + '</a></li>');
+					var li = $('<li><a href="' + data[i].Link + '" class="entry" target="_blank">' + data[i].Title + '</a></li>');
 					li.prependTo(entries)
 				}
 				entries.listview('refresh');
