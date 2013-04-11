@@ -3,7 +3,7 @@
  * ボタンを押した時のポップアップ操作や
  * サーバのAPIを呼び出しを行う
  */
-$('.folder_page').live('pageinit', function() {
+$(document).on('pageinit', '.folder_page', function() {
 	var contents = $(this).find('#contents');
 	var addFolderButton = $(this).find('#add_folder_button');
 	var folderName = $(this).find('#folder_name');
@@ -17,7 +17,7 @@ $('.folder_page').live('pageinit', function() {
 	var editTarget = null;
 	
 	// フォルダを追加するボタン
-	addFolderButton.bind('tap', function() {
+	addFolderButton.on('tap', function() {
 		var name = folderName.val();
 		
 		$.ajax('/api/addfolder', {
@@ -38,7 +38,7 @@ $('.folder_page').live('pageinit', function() {
 	});
 	
 	// フィードを追加するボタン
-	addFeedButton.bind('tap', function() {
+	addFeedButton.on('tap', function() {
 		var url = feedURL.val();
 		
 		if(!url.match(/http:\/\/.+/)) {
@@ -71,7 +71,7 @@ $('.folder_page').live('pageinit', function() {
 	});
 	
 	// 編集ボタン
-	editButton.bind('tap', function() {
+	editButton.on('tap', function() {
 		if(editMode) {
 
 			// 編集モード終了時の処理 //
@@ -82,7 +82,7 @@ $('.folder_page').live('pageinit', function() {
 			$(this).find('.ui-icon').removeClass('ui-icon-check').addClass('ui-icon-edit');
 			
 			// リンクを有効化
-			contents.find('a').unbind('tap');
+			contents.find('a').off('tap');
 			
 			// アイコンを戻す
 			contents.find('.ui-icon').addClass('ui-icon-arrow-r').removeClass('ui-icon-gear');
@@ -100,7 +100,7 @@ $('.folder_page').live('pageinit', function() {
 			
 			// リンクを無効化と編集ポップアップの表示
 			$.each(contents.children(), function(i, data) {
-				$(data).find('a').bind('tap', function() {
+				$(data).find('a').on('tap', function() {
 					editTarget = $(this);
 
 					if(editTarget.attr('type') == 'feed') {
@@ -132,7 +132,7 @@ $('.folder_page').live('pageinit', function() {
 	});
 	
 	// フィード名変更ボタン
-	$(this).find('#feed_name_button').bind('tap', function() {
+	$(this).find('#feed_name_button').on('tap', function() {
 		var name = $('#feed_name').val();
 		var key = editTarget.attr('key');
 		$.ajax('/api/renamefeed', {
@@ -152,7 +152,7 @@ $('.folder_page').live('pageinit', function() {
 	});
 	
 	// フィード削除ボタン
-	$(this).find('#remove_feed').bind('tap', function() {
+	$(this).find('#remove_feed').on('tap', function() {
 		var key = editTarget.attr('key');
 		$.ajax('/api/removefeed', {
 			data: {
@@ -161,6 +161,7 @@ $('.folder_page').live('pageinit', function() {
 			success: function() {
 				editTarget.parent().parent().parent().remove();
 				$('#feed_menu').popup('close');
+				contents.listview('refresh');
 			},
 			error: function() {
 				console.log('error');
@@ -169,7 +170,7 @@ $('.folder_page').live('pageinit', function() {
 	});
 	
 	// フォルダ名変更ボタン
-	$(this).find('#folder_name_button').bind('tap', function() {
+	$(this).find('#folder_name_button').on('tap', function() {
 		var name = $('#folder_new_name').val();
 		var key = editTarget.attr('key');
 		
@@ -190,7 +191,7 @@ $('.folder_page').live('pageinit', function() {
 	});
 	
 	// フォルダ削除ボタン
-	$(this).find('#remove_folder').bind('tap', function() {
+	$(this).find('#remove_folder').on('tap', function() {
 		var key = editTarget.attr('key');
 		$.ajax('/api/removefolder', {
 			data: {
@@ -199,6 +200,7 @@ $('.folder_page').live('pageinit', function() {
 			success: function() {
 				editTarget.parent().parent().parent().remove();
 				$('#folder_menu').popup('close');
+				contents.listview('refresh');
 			},
 			error: function() {
 				console.log('error');
@@ -207,7 +209,7 @@ $('.folder_page').live('pageinit', function() {
 	});
 	
 	// フォルダの既読化ボタン
-	$(this).find('#read').bind('tap', function() {
+	$(this).find('#read').on('tap', function() {
 		if(confirm('フォルダの中身をすべて既読化しますか？')) {
 			var loading_div = $('<div class="loading"></div>').appendTo(contents);
 			$.ajax('/api/readfolder', {
@@ -229,7 +231,7 @@ $('.folder_page').live('pageinit', function() {
 	});
 	
 	// フォルダの更新ボタン
-	$(this).find('#reload').bind('tap', function() {
+	$(this).find('#reload').on('tap', function() {
 		var loading_div = $('<div class="loading"></div>').appendTo(contents);
 		$.ajax('/api/updatefolder', {
 			data: {
@@ -252,7 +254,7 @@ $('.folder_page').live('pageinit', function() {
 	});
 	
 	// XMLアップロード時のチェック
-	$(this).find('#uploadxml').bind('tap', function() {
+	$(this).find('#uploadxml').on('tap', function() {
 		var filename = $('#xmlfile').val();
 		if(!filename.match(/\.xml$/)) {
 			alert('xmlファイルが選択されていません');
@@ -260,3 +262,4 @@ $('.folder_page').live('pageinit', function() {
 		}
 	});
 });
+

@@ -1,11 +1,11 @@
 /**
  * フィード画面のJavaScript
  */
-$('.feed_page').live('pageinit', function() {
+$(document).on('pageinit', '.feed_page', function() {
 	var feedKey = $(this).attr('key');
 
 	// エントリをタップしたら既読化
-	$(this).find('.entry').bind('tap', function() {
+	$(this).find('.entry').on('tap', function() {
 		var self = $(this);
 		$.ajax('/api/read', {
 			data: {
@@ -22,7 +22,7 @@ $('.feed_page').live('pageinit', function() {
 	});
 	
 	// 既読化ボタンをタップしたらすべて既読化
-	$(this).find('#read_all').bind('tap', function() {
+	$(this).find('#read_all').on('tap', function() {
 		if(window.confirm('すべてのエントリを既読化しますか？')) {
 			var loading_div = $('<div class="loading"></div>').appendTo($('#contents'));
 			$.ajax('/api/readall', {
@@ -44,7 +44,7 @@ $('.feed_page').live('pageinit', function() {
 	});
 	
 	// 更新ボタンをタップしたらフィードを更新
-	$(this).find('#reload').bind('tap', function() {
+	$(this).find('#reload').on('tap', function() {
 		var loading_div = $('<div class="loading"></div>').appendTo($('#contents'));
 		$.ajax('/api/updatefeed', {
 			data: {

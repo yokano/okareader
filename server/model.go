@@ -62,7 +62,6 @@ type Feed struct {
 /**
  * エントリ
  * @class
- * @member {string} Id エントリのURL
  * @member {string} Link エントリのURL
  * @member {string} Title エントリのタイトル
  * @member {string} Owner 所有者のユーザID
