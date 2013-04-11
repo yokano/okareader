@@ -148,7 +148,7 @@ func (this *Controller) home(w http.ResponseWriter, r *http.Request) {
 	} else {
 		key, root = dao.getRootFolder(c, u)
 		if root.Type == "" {
-			key = dao.registerFolder(c, u, "root", true, "")
+			key = dao.registerFolder(c, u, "okareader", true, "")
 		}
 		view.showFolder(c, key, w)
 	}

@@ -1,5 +1,5 @@
 application: okareader
-version: 0-0
+version: 1-0-0
 runtime: go
 api_version: go1
 
