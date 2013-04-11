@@ -10,5 +10,8 @@ handlers:
 - url: /task/update
   static_dir: _go_app
   login: admin
+- url: /clear
+  login: admin
+  script: _go_app
 - url: /(.*)
   script: _go_app
