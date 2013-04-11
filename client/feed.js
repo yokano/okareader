@@ -3,7 +3,9 @@
  */
 $(document).on('pageinit', '.feed_page', function() {
 	var feedKey = $(this).attr('key');
-
+	var contents = $(this).find('#contents');
+	var busy = false;
+	
 	// エントリをタップしたら既読化
 	$(this).find('.entry').on('tap', function() {
 		var self = $(this);
@@ -23,8 +25,11 @@ $(document).on('pageinit', '.feed_page', function() {
 	
 	// 既読化ボタンをタップしたらすべて既読化
 	$(this).find('#read_all').on('tap', function() {
+		if(busy) {
+			return;
+		}
+		busy = true;
 		if(window.confirm('すべてのエントリを既読化しますか？')) {
-			var loading_div = $('<div class="loading"></div>').appendTo($('#contents'));
 			$.ajax('/api/readall', {
 				data: {
 					key: feedKey
@@ -37,7 +42,7 @@ $(document).on('pageinit', '.feed_page', function() {
 					$('#entries').empty();
 				},
 				complete: function() {
-					loading_div.remove();
+					busy = false;
 				}
 			});
 		}
@@ -45,7 +50,10 @@ $(document).on('pageinit', '.feed_page', function() {
 	
 	// 更新ボタンをタップしたらフィードを更新
 	$(this).find('#reload').on('tap', function() {
-		var loading_div = $('<div class="loading"></div>').appendTo($('#contents'));
+		if(busy) {
+			return;
+		}
+		busy = true;
 		$.ajax('/api/updatefeed', {
 			data: {
 				key: feedKey
@@ -69,7 +77,7 @@ $(document).on('pageinit', '.feed_page', function() {
 				console.log('error');
 			},
 			complete: function() {
-				loading_div.remove();
+				busy = false;
 			}
 		});
 	});

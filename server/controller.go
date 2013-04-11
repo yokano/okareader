@@ -558,17 +558,13 @@ func (this *Controller) importXML(w http.ResponseWriter, r *http.Request) {
 	var dao *DAO
 	var c appengine.Context
 	var tree []*Node
-	var view *View
 	
 	c = appengine.NewContext(r)
 	dao = new(DAO)
-	view = new(View)
 	folderKey = r.FormValue("key")
 	xml = dao.loadXML(c)
 	tree = dao.getTreeFromXML(c, xml)
-	
 	dao.importXML(c, tree, folderKey)
-	view.showFolder(c, folderKey, w)
 }
 
 /**

@@ -15,6 +15,7 @@ $(document).on('pageinit', '.folder_page', function() {
 	var editButton = $(this).find('#edit');
 	var editMode = false;
 	var editTarget = null;
+	var busy = false;
 	
 	// フォルダを追加するボタン
 	addFolderButton.on('tap', function() {
@@ -135,6 +136,11 @@ $(document).on('pageinit', '.folder_page', function() {
 	$(this).find('#feed_name_button').on('tap', function() {
 		var name = $('#feed_name').val();
 		var key = editTarget.attr('key');
+		
+		if(name == '') {
+			alert('名前を入力してください');
+			return;
+		}
 		$.ajax('/api/renamefeed', {
 			data: {
 				name: name,
@@ -174,6 +180,11 @@ $(document).on('pageinit', '.folder_page', function() {
 		var name = $('#folder_new_name').val();
 		var key = editTarget.attr('key');
 		
+		if(name == '') {
+			alert('名前を入力してください');
+			return;
+		}
+		
 		$.ajax('/api/renamefolder', {
 			data: {
 				key: key,
@@ -210,21 +221,24 @@ $(document).on('pageinit', '.folder_page', function() {
 	
 	// フォルダの既読化ボタン
 	$(this).find('#read').on('tap', function() {
+		if(busy) {
+			return;
+		}
+		busy = true;
 		if(confirm('フォルダの中身をすべて既読化しますか？')) {
-			var loading_div = $('<div class="loading"></div>').appendTo(contents);
 			$.ajax('/api/readfolder', {
 				data: {
 					key: folderKey
 				},
-				async: false,
 				success: function() {
 					$('.ui-li-count').remove();
+					alert('フォルダを既読化しました');
 				},
 				error: function() {
 					console.log('error');
 				},
 				complete: function() {
-					loading_div.remove();
+					busy = false;
 				}
 			});
 		}
@@ -232,23 +246,40 @@ $(document).on('pageinit', '.folder_page', function() {
 	
 	// フォルダの更新ボタン
 	$(this).find('#reload').on('tap', function() {
-		var loading_div = $('<div class="loading"></div>').appendTo(contents);
+		if(busy) {
+			return;
+		}
+		busy = true;
+		
+		if(!confirm('フォルダ内のフィードを更新しますか？')) {
+			return;
+		}
+		
 		$.ajax('/api/updatefolder', {
 			data: {
 				key: folderKey
 			},
 			dataType: 'json',
-			async: false,
 			success: function(data) {
+				var updated = false;
 				for(var key in data) {
-					$('[key=' + key + ']').find('.ui-li-count').html(data[key]);
+					var count = $('[key=' + key + ']').find('.ui-li-count');
+					if(count.html() < data[key]) {
+						updated = true;
+					}
+					count.html(data[key]);
+				}
+				if(updated) {
+					alert('新着エントリを追加しました');
+				} else {
+					alert('新着はありませんでした');
 				}
 			},
 			error: function() {
 				console.log('error');
 			},
 			complete: function() {
-				loading_div.remove();
+				busy = false;
 			}
 		});
 	});

@@ -265,6 +265,7 @@ func (this *DAO) getItem(c appengine.Context, encodedKey string) (string, interf
 		URL string
 		Standard string
 		Parent string
+		SiteURL string
 		FinalEntry string
 	}
 	var item *Item
@@ -554,7 +555,6 @@ func (this *DAO) readFeed(c appengine.Context, encodedKey string) {
 	
 	entries = this.getEntries(c, encodedKey)
 	for _, entry = range entries {
-//		this.removeEntry(c, entry.Id, encodedKey)
 		this.removeEntry(c, entry.Link, encodedKey)
 	}
 }
