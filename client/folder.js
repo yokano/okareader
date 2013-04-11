@@ -13,6 +13,11 @@ $(document).on('pageinit', '.folder_page', function() {
 	var feedURL = $(this).find('#feed_url');
 	var addFeed = $(this).find('#add_feed');
 	var editButton = $(this).find('#edit');
+	var feedName = $(this).find('#feed_name');
+	var feedMenu = $(this).find('#feed_menu');
+	var folderNewName = $(this).find('#folder_new_name');
+	var folderMenu = $(this).find('#folder_menu');
+	var editFeed = $(this).find('#edit_feed');
 	var editMode = false;
 	var editTarget = null;
 	var busy = false;
@@ -28,7 +33,7 @@ $(document).on('pageinit', '.folder_page', function() {
 			},
 			dataType: 'json',
 			success: function(data) {
-				contents.append($('<li><div class="folder_icon"></div><a class="item" href="/folder?key=' + data.key + '" key="' + data.key + '" type="folder">' + name + '</a></li>')).listview('refresh');
+				contents.append($('<li><div class="folder_icon"></div><a class="item" href="/folder?key=' + data.key + '" key="' + data.key + '" type="folder"><span class="title">' + name + '</span></a></li>')).listview('refresh');
 				addFolder.popup('close');
 				folderName.val('');
 			},
@@ -105,14 +110,14 @@ $(document).on('pageinit', '.folder_page', function() {
 					editTarget = $(this);
 
 					if(editTarget.attr('type') == 'feed') {
-						$('#feed_name').val($(this).find('.title').html());
-						$('#feed_menu').popup('open', {
+						feedName.val($(this).find('.title').html());
+						feedMenu.popup('open', {
 							transition: 'pop',
 							positionTo: 'window'
 						});
 					} else if(editTarget.attr('type') == 'folder') {
-						$('#folder_new_name').val($(this).find('.title').html());
-						$('#folder_menu').popup('open', {
+						folderNewName.val($(this).find('.title').html());
+						folderMenu.popup('open', {
 							transition: 'pop',
 							positionTo: 'window'
 						});
@@ -134,7 +139,7 @@ $(document).on('pageinit', '.folder_page', function() {
 	
 	// フィード名変更ボタン
 	$(this).find('#feed_name_button').on('tap', function() {
-		var name = $('#feed_name').val();
+		var name = feedName.val();
 		var key = editTarget.attr('key');
 		
 		if(name == '') {
@@ -148,8 +153,8 @@ $(document).on('pageinit', '.folder_page', function() {
 			},
 			success: function() {
 				editTarget.find('.title').html(name);
-				$('#feed_name').val('');
-				$('#edit_feed').popup('close');
+				feedName.val('');
+				editFeed.popup('close');
 			},
 			error: function() {
 				console.log('error');
@@ -166,7 +171,7 @@ $(document).on('pageinit', '.folder_page', function() {
 			},
 			success: function() {
 				editTarget.parent().parent().parent().remove();
-				$('#feed_menu').popup('close');
+				feedMenu.popup('close');
 				contents.listview('refresh');
 			},
 			error: function() {
@@ -177,7 +182,7 @@ $(document).on('pageinit', '.folder_page', function() {
 	
 	// フォルダ名変更ボタン
 	$(this).find('#folder_name_button').on('tap', function() {
-		var name = $('#folder_new_name').val();
+		var name = folderNewName.val();
 		var key = editTarget.attr('key');
 		
 		if(name == '') {
@@ -193,7 +198,7 @@ $(document).on('pageinit', '.folder_page', function() {
 			success: function() {
 				editTarget.find('.title').html(name);
 				$('#edit_folder').popup('close');
-				$('#folder_new_name').val('');
+				folderNewName.val('');
 			},
 			error: function() {
 				console.log('error');
@@ -210,7 +215,7 @@ $(document).on('pageinit', '.folder_page', function() {
 			},
 			success: function() {
 				editTarget.parent().parent().parent().remove();
-				$('#folder_menu').popup('close');
+				folderMenu.popup('close');
 				contents.listview('refresh');
 			},
 			error: function() {
