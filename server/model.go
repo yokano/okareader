@@ -575,7 +575,11 @@ func (this *DAO) registerEntries(c appengine.Context, entries []*Entry, to strin
 	var feed *Feed
 	var feedKey *datastore.Key
 	var u *user.User
-
+	
+	if len(entries) == 0 {
+		return nil
+	}
+	
 	feedKey, err = datastore.DecodeKey(to)
 	feed = this.getFeed(c, to)
 	
@@ -593,7 +597,7 @@ func (this *DAO) registerEntries(c appengine.Context, entries []*Entry, to strin
 	feed.Entries = prepend(feed.Entries, result)
 	
 	// 最新のエントリを保存
-	feed.FinalEntry = feed.Entries[0]
+	feed.FinalEntry = entries[0].Link
 		
 	_, err = datastore.Put(c, feedKey, feed)
 	
@@ -756,9 +760,6 @@ func (this *DAO) updateFeed(c appengine.Context, encodedFeedKey string, parentCh
 	var feed *Feed
 	var err error
 	var feedKey *datastore.Key
-	var savedEntry *Entry
-	var savedEntryKey *datastore.Key
-	var encodedSavedEntryKey string
 	var currentEntries []*Entry
 	var newEntries []*Entry
 	var xml []byte
@@ -767,18 +768,8 @@ func (this *DAO) updateFeed(c appengine.Context, encodedFeedKey string, parentCh
 	// フィードの取得
 	feedKey, err = datastore.DecodeKey(encodedFeedKey)
 	check(c, err)
-
 	feed = new(Feed)
 	err = datastore.Get(c, feedKey, feed)
-	check(c, err)
-	
-	// 最新のエントリを取得
-	encodedSavedEntryKey = feed.FinalEntry
-	savedEntryKey, err = datastore.DecodeKey(encodedSavedEntryKey)
-	check(c, err)
-
-	savedEntry = new(Entry)
-	err = datastore.Get(c, savedEntryKey, savedEntry)
 	check(c, err)
 	
 	// URLからエントリをフェッチする
@@ -804,7 +795,7 @@ func (this *DAO) updateFeed(c appengine.Context, encodedFeedKey string, parentCh
 	// エントリ一覧から最新エントリと同じURLを探す
 	newEntries = make([]*Entry, 0)
 	for i = 0; i < len(currentEntries); i++ {
-		if currentEntries[i].Id == savedEntry.Id {
+		if currentEntries[i].Link == feed.FinalEntry {
 			break
 		}
 		newEntries = append(newEntries, currentEntries[i])
