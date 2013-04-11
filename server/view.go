@@ -96,6 +96,7 @@ func (this *View) showFeed(c appengine.Context, feedKey string, w http.ResponseW
 	contents["Entries"] = entries
 	contents["Parent"] = feed.Parent
 	contents["FeedKey"] = feedKey
+	contents["SiteURL"] = feed.SiteURL
 	contents["LogoutURL"], err = user.LogoutURL(c, "/")
 	check(c, err)
 	

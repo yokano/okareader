@@ -52,6 +52,7 @@ func (this *RSS1) encode(c appengine.Context, xmldata []byte) (*Feed, []*Entry) 
 	
 	feed = new(Feed)
 	feed.URL = rdf.Channel.About
+	feed.SiteURL = rdf.Channel.Link
 	feed.Title = rdf.Channel.Title
 	feed.Standard = "RSS1.0"
 	

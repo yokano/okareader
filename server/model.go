@@ -46,6 +46,7 @@ type Folder struct {
  * @member {string} Standard フィードの規格("Atom"/"RSS1.0"/"RSS2.0"のいずれか)
  * @member {string} FinalEntry 最後に取得したエントリのキー
  * @member {string} URL フィードファイルの場所
+ * @member {string} SiteURL ウェブページの場所
  */
 type Feed struct {
 	Title string
@@ -55,6 +56,7 @@ type Feed struct {
 	Standard string
 	FinalEntry string
 	URL string
+	SiteURL string
 }
 
 /**
@@ -66,7 +68,6 @@ type Feed struct {
  * @member {string} Owner 所有者のユーザID
  */
 type Entry struct {
-//	Id string
 	Link string
 	Title string
 	Owner string
@@ -949,12 +950,16 @@ func (this *DAO) importXML(c appengine.Context, tree []*Node, folderKey string) 
 				feed = new(Feed)
 				entries = make([]*Entry, 0)
 				feed, entries = this.getFeedFromXML(c, depth2.xmlURL)
+				feed.URL = depth2.xmlURL
+				feed.SiteURL = depth2.htmlURL
 				this.registerFeed(c, feed, entries, parentKey)
 			}
 		} else {
 			feed = new(Feed)
 			entries = make([]*Entry, 0)
 			feed, entries = this.getFeedFromXML(c, depth1.xmlURL)
+			feed.URL = depth1.xmlURL
+			feed.SiteURL = depth1.htmlURL
 			this.registerFeed(c, feed, entries, parentKey)
 		}
 	}

@@ -17,7 +17,7 @@
 		<div data-role="page" class="feed_page" key="{{.FeedKey}}">
 			<div data-role="header" data-position="fixed">
 				<a href="/folder?key={{.Parent}}" data-icon="back" data-transition="slide" data-direction="reverse">戻る</a>
-				<h1>{{.Title}}</h1>
+				<h1><a href="{{.SiteURL}}" target="_blank">{{.Title}}</a></h1>
 				<a href="{{.LogoutURL}}" data-icon="delete" class="ui-btn-right">ログアウト</a>
 			</div>
 			<div data-role="content">

@@ -30,12 +30,14 @@ func (this *Atom) encode(c appengine.Context, xmldata []byte) (*Feed, []*Entry) 
 		Title string `xml:"title"`
 		Owner string
 	}
+	type FeedLink struct {
+		Rel string `xml:"rel,attr"`
+		Href string `xml:"href,attr"`
+	}
 	type AtomTemplate struct {
 		Id string `xml:"id"`
 		Title string `xml:"title"`
-		Link struct {
-			Href string `xml:"href,attr"`
-		} `xml:"link"`
+		Link []FeedLink `xml:"link"`
 		Entries []*EntryTemplate `xml:"entry"`
 		Owner string
 	}
@@ -44,6 +46,7 @@ func (this *Atom) encode(c appengine.Context, xmldata []byte) (*Feed, []*Entry) 
 	var entries []*Entry
 	var entry *Entry
 	var err error
+	var link FeedLink
 	
 	feed = new(Feed)
 	feed.Entries = make([]string, 0)
@@ -64,7 +67,13 @@ func (this *Atom) encode(c appengine.Context, xmldata []byte) (*Feed, []*Entry) 
 	}
 	
 	// Atomの変換
-	feed.URL = atomTemplate.Link.Href
+	for _, link = range atomTemplate.Link {
+		if link.Rel == "alternate" {
+			feed.SiteURL = link.Href
+		} else if link.Rel == "self" {
+			feed.URL = link.Href
+		}
+	}
 	feed.Title = atomTemplate.Title
 	feed.Standard = "Atom"
 	
