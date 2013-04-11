@@ -1,0 +1,114 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Okareader by yokano</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/respond.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!--[if lt IE 8]>
+    <link rel="stylesheet" href="stylesheets/ie.css">
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+      <div id="header">
+        <nav>
+          <li class="fork"><a href="https://github.com/yokano/okareader">View On GitHub</a></li>
+          <li class="downloads"><a href="https://github.com/yokano/okareader/zipball/master">ZIP</a></li>
+          <li class="downloads"><a href="https://github.com/yokano/okareader/tarball/master">TAR</a></li>
+          <li class="title">DOWNLOADS</li>
+        </nav>
+      </div><!-- end header -->
+
+    <div class="wrapper">
+
+      <section>
+        <div id="title">
+          <h1>Okareader</h1>
+          <p>PC,スマホ対応ブラウザRSSリーダー</p>
+          <hr>
+          <span class="credits left">Project maintained by <a href="https://github.com/yokano">yokano</a></span>
+          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="http://twitter.com/#!/michigangraham">mattgraham</a></span>
+        </div>
+
+        <h1>okareader</h1>
+
+<p><img src="https://raw.github.com/yokano/okareader/master/okareader_ss.png" alt="スクリーンショット"></p>
+
+<p>PC,スマホ対応RSSリーダーのWebアプリ<br>
+Google App Engine + Go で開発しました<br>
+MitLicense です<br>
+Google Reader の xml ファイルをインポートすることも出来ます<br>
+ユーザ認証に Google アカウントを使用しています  </p>
+
+<pre><code>okareader/
+├── LICENSE.txt
+├── README.md
+├── app.yaml
+├── client
+│   ├── feed.js
+│   ├── feed.png
+│   ├── folder.js
+│   ├── folder.png
+│   ├── import.js
+│   ├── okareader.css
+│   └── okareader.png
+├── cron.yaml
+└── server
+    ├── atom.go
+    ├── controller.go
+    ├── html
+    │   ├── feed.html
+    │   ├── folder.html
+    │   ├── import.html
+    │   └── login.html
+    ├── lib.go
+    ├── main.go
+    ├── model.go
+    ├── rss1.go
+    ├── rss2.go
+    └── view.go
+</code></pre>
+
+<p>基本的にMVCパターンになっています。<br>
+外部ライブラリとして jQueryMobile を使用しています。</p>
+
+<h2>設定ファイル</h2>
+
+<ul>
+<li>app.yaml　　アプリの設定</li>
+<li>cron.yaml　　フィードの定期的な自動更新の設定</li>
+</ul><h2>client/</h2>
+
+<p>このディレクトリはstatic_dirとして設定されています<br>
+htmlファイルから参照するスクリプトや画像を保存するディレクトリです<br>
+goから直接このファイルを参照することはできません</p>
+
+<h2>server/</h2>
+
+<ul>
+<li>main.go　　controllerの呼び出し</li>
+<li>controller.go　　クライアントからのリクエストをViewやModelに振り分けながら処理する</li>
+<li>model.go　　データ操作全般を行う</li>
+<li>view.go　　画面表示全般を行う</li>
+<li>rss1.go　　RSS1.0を読み込むための処理</li>
+<li>rss2.go　　RSS2.0を読み込むための処理</li>
+<li>atom.go　　Atomを読み込むための処理</li>
+<li>lib.go　　その他の汎用的な関数</li>
+</ul><h2>連絡先</h2>
+
+<p><a href="mailto:yuta.okano@gmail.com">yuta.okano@gmail.com</a></p>
+      </section>
+
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
